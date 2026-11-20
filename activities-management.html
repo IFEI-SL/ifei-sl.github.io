@@ -1,0 +1,712 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IFEI-SL | Activities Management</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6f5;
+    color: #263746;
+}
+
+header {
+    background: #123b56;
+    color: white;
+    padding: 20px;
+}
+
+.header-inner {
+    max-width: 1050px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+header img {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    background: white;
+    padding: 4px;
+    border-radius: 7px;
+}
+
+header h1 { margin: 0; font-size: 21px; }
+header p { margin: 5px 0 0; font-size: 13px; }
+
+main {
+    max-width: 1050px;
+    margin: 30px auto;
+    padding: 0 18px;
+}
+
+.panel {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.05);
+}
+
+h2, h3 { color: #123b56; }
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 7px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5d9;
+    border-radius: 5px;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+button, .link-button {
+    border: none;
+    padding: 11px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.primary { background: #198754; color: white; }
+.secondary { background: #123b56; color: white; }
+.gold { background: #d6a84f; color: #123b56; }
+.danger { background: #b52b35; color: white; }
+.neutral { background: #e5ebee; color: #263746; }
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.activity {
+    border: 1px solid #dce4e7;
+    border-left: 5px solid #198754;
+    border-radius: 6px;
+    padding: 18px;
+    margin-top: 15px;
+}
+
+.activity h3 { margin: 0 0 10px; }
+
+.activity p {
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.activity img {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    max-height: 190px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin: 12px 0;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 3px 5px 3px 0;
+}
+
+.published { background: #e1f3e8; color: #176b3a; }
+.hidden { background: #fce8e8; color: #a12626; }
+
+.status {
+    display: none;
+    padding: 13px;
+    border-radius: 5px;
+    margin-top: 15px;
+    line-height: 1.5;
+}
+
+#loading {
+    text-align: center;
+    padding: 70px 15px;
+}
+
+#error {
+    display: none;
+    max-width: 800px;
+    margin: 35px auto;
+    padding: 25px;
+    background: white;
+    color: #a12626;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #687780;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-inner">
+        <img src="logo.png" alt="IFEI-SL Logo">
+        <div>
+            <h1>IFEI-SL Activities Management</h1>
+            <p>Manage Activities, Photos, Videos and Updates</p>
+        </div>
+    </div>
+</header>
+
+<div id="loading">
+    <h2>Checking administrator access...</h2>
+    <p>Please wait.</p>
+</div>
+
+<div id="error">
+    <h2>Access not available</h2>
+    <p id="errorMessage"></p>
+    <a class="link-button secondary" href="admin.html">Return to Login</a>
+</div>
+
+<main id="mainContent" style="display:none;">
+
+    <section class="panel">
+        <h2>Activities Management</h2>
+        <p>
+            Add and manage IFEI-SL activities, photographs,
+            videos and organisational updates.
+        </p>
+
+        <div id="status" class="status"></div>
+
+        <div class="actions">
+            <a class="link-button secondary" href="admin-dashboard.html">
+                Back to Dashboard
+            </a>
+            <a class="link-button secondary" href="index.html">
+                View Public Website
+            </a>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2 id="formTitle">Add New Activity</h2>
+
+        <form id="activityForm">
+
+            <label for="activityTitle">Activity Title</label>
+            <input
+                type="text"
+                id="activityTitle"
+                maxlength="200"
+                required
+                placeholder="Enter activity title">
+
+            <label for="activityType">Activity Type</label>
+            <select id="activityType" required>
+                <option value="Photo">Photo</option>
+                <option value="Video">Video</option>
+                <option value="Update">Update</option>
+            </select>
+
+            <label for="activityDescription">Description</label>
+            <textarea
+                id="activityDescription"
+                maxlength="5000"
+                placeholder="Describe the activity"></textarea>
+
+            <label for="activityDate">Activity Date</label>
+            <input type="date" id="activityDate">
+
+            <label for="mediaFile">Upload a Photo or Video (Optional)</label>
+            <input
+                type="file"
+                id="mediaFile"
+                accept="image/*,video/mp4,video/webm,video/ogg">
+
+            <p style="font-size:13px;color:#687780;line-height:1.5;">
+                Choose a photo for a Photo activity or a video for a Video activity.
+                Maximum file size: 50 MB. Uploaded files will be stored in the
+                IFEI-SL public media bucket.
+            </p>
+
+            <label for="imageUrl">Or use a Photograph Link (Optional)</label>
+            <input
+                type="url"
+                id="imageUrl"
+                placeholder="https://example.com/photo.jpg">
+
+            <label for="videoUrl">Or use a Video Link (Optional)</label>
+            <input
+                type="url"
+                id="videoUrl"
+                placeholder="Paste a video link">
+
+            <label>
+                <input type="checkbox" id="isPublished" checked>
+                Publish this activity on the public website
+            </label>
+
+            <div class="actions">
+                <button type="submit" class="primary" id="saveButton">
+                    Save Activity
+                </button>
+
+                <button
+                    type="button"
+                    class="neutral"
+                    id="cancelButton"
+                    onclick="cancelEdit()"
+                    style="display:none;">
+                    Cancel Edit
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Existing Activities</h2>
+        <p>Activities saved in the IFEI-SL database appear below. New uploads are stored in the public media bucket.</p>
+        <div id="activityList">Loading activities...</div>
+    </section>
+
+</main>
+
+<footer>
+    IFEI-SL | From economic exclusion to opportunity,
+    dignity and sustainable livelihoods.
+</footer>
+
+<script>
+const SUPABASE_URL =
+"https://nmpvnkaqwxguawtfihbn.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+"sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+
+const ADMIN_USER_ID =
+"c262096c-0665-4871-82e9-c7a1b7f2c1ce";
+
+const ACTIVITY_MEDIA_BUCKET = "ifei-activity-videos";
+const MAX_MEDIA_FILE_SIZE = 50 * 1024 * 1024;
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+let editingId = null;
+let activities = [];
+
+function showStatus(message, success = true) {
+    const box = document.getElementById("status");
+    box.style.display = "block";
+    box.style.background = success ? "#eaf5ee" : "#fdeaea";
+    box.style.color = success ? "#176b3a" : "#a12626";
+    box.textContent = message;
+}
+
+function showError(message) {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("mainContent").style.display = "none";
+    document.getElementById("error").style.display = "block";
+    document.getElementById("errorMessage").textContent = message;
+}
+
+async function checkAdministrator() {
+    try {
+        const { data, error } = await db.auth.getSession();
+
+        if (error) throw error;
+
+        if (!data.session) {
+            window.location.href = "admin.html";
+            return;
+        }
+
+        if (data.session.user.id !== ADMIN_USER_ID) {
+            await db.auth.signOut();
+            showError("This account is not authorised to manage activities.");
+            return;
+        }
+
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+
+        await loadActivities();
+
+    } catch (error) {
+        showError("Unable to verify administrator access. Please return to login.");
+    }
+}
+
+async function loadActivities() {
+    const list = document.getElementById("activityList");
+    list.textContent = "Loading activities...";
+
+    const { data, error } = await db
+        .from("ifei_activities")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        list.textContent = "Could not load activities: " + error.message;
+        return;
+    }
+
+    activities = data || [];
+    displayActivities();
+}
+
+function displayActivities() {
+    const list = document.getElementById("activityList");
+    list.replaceChildren();
+
+    if (activities.length === 0) {
+        list.textContent = "No activities have been added yet.";
+        return;
+    }
+
+    activities.forEach(activity => {
+        const card = document.createElement("div");
+        card.className = "activity";
+
+        const heading = document.createElement("h3");
+        heading.textContent = activity.title;
+
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "badge";
+        typeBadge.style.background = "#e8eef3";
+        typeBadge.textContent = activity.activity_type;
+
+        const publishBadge = document.createElement("span");
+        publishBadge.className = "badge " +
+            (activity.is_published ? "published" : "hidden");
+        publishBadge.textContent =
+            activity.is_published ? "Published" : "Hidden";
+
+        const description = document.createElement("p");
+        description.textContent = activity.description || "";
+
+        card.append(heading, typeBadge, publishBadge);
+
+        if (activity.activity_date) {
+            const date = document.createElement("p");
+            date.textContent = "Date: " + activity.activity_date;
+            card.append(date);
+        }
+
+        if (activity.image_url) {
+            const image = document.createElement("img");
+            image.src = activity.image_url;
+            image.alt = activity.title;
+            image.loading = "lazy";
+            image.onerror = () => {
+                image.alt = "Image could not be displayed";
+                image.style.display = "none";
+            };
+            card.append(image);
+        }
+
+        if (activity.video_url) {
+            const videoLink = document.createElement("a");
+            videoLink.href = activity.video_url;
+            videoLink.target = "_blank";
+            videoLink.rel = "noopener noreferrer";
+            videoLink.textContent = "Open video link";
+            card.append(videoLink);
+        }
+
+        card.append(description);
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const editButton = document.createElement("button");
+        editButton.className = "gold";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", () => editActivity(activity.id));
+
+        const toggleButton = document.createElement("button");
+        toggleButton.className = "secondary";
+        toggleButton.textContent =
+            activity.is_published ? "Hide Activity" : "Publish Activity";
+        toggleButton.addEventListener("click", () => toggleActivity(activity));
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "danger";
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => deleteActivity(activity));
+
+        actions.append(editButton, toggleButton, deleteButton);
+        card.append(actions);
+        list.append(card);
+    });
+}
+
+document.getElementById("activityForm")
+.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const button = document.getElementById("saveButton");
+
+    const title = document.getElementById("activityTitle").value.trim();
+    const activityType = document.getElementById("activityType").value;
+    const description = document.getElementById("activityDescription").value.trim();
+    const activityDate = document.getElementById("activityDate").value || null;
+    let imageUrl = document.getElementById("imageUrl").value.trim() || null;
+    let videoUrl = document.getElementById("videoUrl").value.trim() || null;
+    const mediaFile = document.getElementById("mediaFile").files[0] || null;
+    const isPublished = document.getElementById("isPublished").checked;
+
+    if (!title) {
+        showStatus("Please enter an activity title.", false);
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+
+    try {
+        const { data: sessionData, error: sessionError } =
+            await db.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!sessionData.session ||
+            sessionData.session.user.id !== ADMIN_USER_ID) {
+            throw new Error("Administrator access is required.");
+        }
+
+        // Upload a selected media file first, then save its public URL
+        // in the existing activity record.
+        if (mediaFile) {
+            if (mediaFile.size > MAX_MEDIA_FILE_SIZE) {
+                throw new Error("The selected file is larger than 50 MB. Please choose a smaller file.");
+            }
+
+            const isImage = mediaFile.type.startsWith("image/");
+            const isVideo = mediaFile.type.startsWith("video/");
+
+            if (!isImage && !isVideo) {
+                throw new Error("Please choose a valid image or video file.");
+            }
+
+            if (activityType === "Photo" && !isImage) {
+                throw new Error("For a Photo activity, please choose an image file.");
+            }
+
+            if (activityType === "Video" && !isVideo) {
+                throw new Error("For a Video activity, please choose a video file.");
+            }
+
+            const originalName = mediaFile.name || "activity-media";
+            const extensionMatch = originalName.match(/\.([a-zA-Z0-9]{1,10})$/);
+            const extension = extensionMatch ? extensionMatch[1].toLowerCase() : "bin";
+            const safeExtension = extension.replace(/[^a-z0-9]/g, "") || "bin";
+            const uniquePart = (window.crypto && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : Date.now() + "-" + Math.random().toString(36).slice(2);
+            const folder = isImage ? "photos" : "videos";
+            const filePath = folder + "/" + Date.now() + "-" + uniquePart + "." + safeExtension;
+
+            button.textContent = "Uploading media...";
+
+            const { error: uploadError } = await db
+                .storage
+                .from(ACTIVITY_MEDIA_BUCKET)
+                .upload(filePath, mediaFile, {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType: mediaFile.type || undefined
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = db
+                .storage
+                .from(ACTIVITY_MEDIA_BUCKET)
+                .getPublicUrl(filePath);
+
+            if (!publicUrlData || !publicUrlData.publicUrl) {
+                throw new Error("The file uploaded, but Supabase did not return its public URL.");
+            }
+
+            if (isImage) {
+                imageUrl = publicUrlData.publicUrl;
+            } else {
+                videoUrl = publicUrlData.publicUrl;
+            }
+        }
+
+        const activityData = {
+            title: title,
+            activity_type: activityType,
+            description: description,
+            activity_date: activityDate,
+            image_url: imageUrl,
+            video_url: videoUrl,
+            is_published: isPublished,
+            updated_at: new Date().toISOString()
+        };
+
+        if (editingId) {
+            const { error } = await db
+                .from("ifei_activities")
+                .update(activityData)
+                .eq("id", editingId);
+
+            if (error) throw error;
+
+            showStatus("Activity updated successfully.");
+
+        } else {
+            const { error } = await db
+                .from("ifei_activities")
+                .insert(activityData);
+
+            if (error) throw error;
+
+            showStatus("New activity added successfully.");
+        }
+
+        cancelEdit();
+        await loadActivities();
+
+    } catch (error) {
+        showStatus("Save failed: " + error.message, false);
+
+    } finally {
+        button.disabled = false;
+        button.textContent = editingId ? "Update Activity" : "Save Activity";
+    }
+});
+
+function editActivity(id) {
+    const activity = activities.find(item => item.id === id);
+
+    if (!activity) return;
+
+    editingId = id;
+
+    document.getElementById("activityTitle").value = activity.title || "";
+    document.getElementById("activityType").value =
+        activity.activity_type || "Update";
+    document.getElementById("activityDescription").value =
+        activity.description || "";
+    document.getElementById("activityDate").value =
+        activity.activity_date || "";
+    document.getElementById("imageUrl").value =
+        activity.image_url || "";
+    document.getElementById("videoUrl").value =
+        activity.video_url || "";
+    document.getElementById("isPublished").checked =
+        activity.is_published;
+
+    document.getElementById("formTitle").textContent = "Edit Activity";
+    document.getElementById("saveButton").textContent = "Update Activity";
+    document.getElementById("cancelButton").style.display = "inline-block";
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function cancelEdit() {
+    editingId = null;
+
+    document.getElementById("activityForm").reset();
+    document.getElementById("mediaFile").value = "";
+    document.getElementById("isPublished").checked = true;
+    document.getElementById("formTitle").textContent = "Add New Activity";
+    document.getElementById("saveButton").textContent = "Save Activity";
+    document.getElementById("cancelButton").style.display = "none";
+}
+
+async function toggleActivity(activity) {
+    const newStatus = !activity.is_published;
+
+    if (!confirm(
+        "Do you want to " + (newStatus ? "publish" : "hide") +
+        " this activity?"
+    )) return;
+
+    const { error } = await db
+        .from("ifei_activities")
+        .update({
+            is_published: newStatus,
+            updated_at: new Date().toISOString()
+        })
+        .eq("id", activity.id);
+
+    if (error) {
+        showStatus("Could not update activity: " + error.message, false);
+        return;
+    }
+
+    showStatus("Activity status updated.");
+    await loadActivities();
+}
+
+async function deleteActivity(activity) {
+    if (!confirm(
+        'Are you sure you want to delete "' +
+        activity.title + '"? This cannot be undone.'
+    )) return;
+
+    const { error } = await db
+        .from("ifei_activities")
+        .delete()
+        .eq("id", activity.id);
+
+    if (error) {
+        showStatus("Could not delete activity: " + error.message, false);
+        return;
+    }
+
+    if (editingId === activity.id) cancelEdit();
+
+    showStatus("Activity deleted.");
+    await loadActivities();
+}
+
+checkAdministrator();
+</script>
+
+</body>
+</html>
