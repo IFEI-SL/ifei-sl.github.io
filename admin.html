@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IFEI-SL Admin Login</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #092b40, #123b56);
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.login-box {
+    background: white;
+    width: 100%;
+    max-width: 420px;
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.25);
+    text-align: center;
+}
+
+.logo {
+    width: 95px;
+    height: 95px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+h2 { color: #123b56; margin-bottom: 8px; }
+
+.subtitle {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 6px;
+    background: #198754;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover { background: #146c43; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.text-button {
+    display: inline-block;
+    margin-top: 16px;
+    color: #123b56;
+    background: none;
+    border: none;
+    padding: 5px;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.text-button:hover { color: #198754; background: none; }
+
+#message {
+    margin-top: 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.footer {
+    margin-top: 25px;
+    color: #888;
+    font-size: 12px;
+}
+
+.hidden { display: none; }
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <img src="logo.png" class="logo" alt="IFEI-SL Logo">
+
+    <h2>IFEI-SL Administration</h2>
+
+    <p class="subtitle">
+        Sign in to manage the IFEI-SL website
+    </p>
+
+    <form id="loginForm">
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Administrator Email"
+            autocomplete="username"
+            required
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+        >
+
+        <button type="submit" id="loginButton">
+            Sign In
+        </button>
+
+    </form>
+
+    <button
+        type="button"
+        class="text-button"
+        id="forgotButton"
+    >
+        Forgot Password?
+    </button>
+
+    <form id="resetRequestForm" class="hidden">
+
+        <p class="subtitle">
+            Enter the administrator email address registered
+            with IFEI-SL. We will send a password-reset link
+            if the account is eligible.
+        </p>
+
+        <input
+            type="email"
+            id="resetEmail"
+            placeholder="Administrator Email"
+            autocomplete="email"
+            required
+        >
+
+        <button type="submit" id="sendResetButton">
+            Send Password Reset Email
+        </button>
+
+        <button
+            type="button"
+            class="text-button"
+            id="backToLoginButton"
+        >
+            Back to Sign In
+        </button>
+
+    </form>
+
+    <form id="newPasswordForm" class="hidden">
+
+        <p class="subtitle">
+            Choose a new password for the authorised
+            administrator account.
+        </p>
+
+        <input
+            type="password"
+            id="newPassword"
+            placeholder="New Password (at least 8 characters)"
+            autocomplete="new-password"
+            minlength="8"
+            required
+        >
+
+        <input
+            type="password"
+            id="confirmPassword"
+            placeholder="Confirm New Password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+        >
+
+        <button type="submit" id="savePasswordButton">
+            Save New Password
+        </button>
+
+    </form>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <div class="footer">
+        IFEI-SL | Inclusive Financial Empowerment Initiative – Sierra Leone
+    </div>
+
+</div>
+
+<script>
+
+// ========================================
+// SUPABASE CONFIGURATION
+// ========================================
+
+const SUPABASE_URL =
+"https://nmpvnkaqwxguawtfihbn.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+"sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+
+const ADMIN_USER_ID =
+"c262096c-0665-4871-82e9-c7a1b7f2c1ce";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+// ========================================
+// PAGE ELEMENTS
+// ========================================
+
+const loginForm = document.getElementById("loginForm");
+
+const loginButton = document.getElementById("loginButton");
+
+const forgotButton = document.getElementById("forgotButton");
+
+const resetRequestForm =
+document.getElementById("resetRequestForm");
+
+const newPasswordForm =
+document.getElementById("newPasswordForm");
+
+const message = document.getElementById("message");
+
+let isPasswordRecovery = false;
+
+// ========================================
+// MESSAGE DISPLAY
+// ========================================
+
+function showMessage(text, color) {
+    message.textContent = text;
+    message.style.color = color;
+}
+
+// ========================================
+// SHOW LOGIN FORM
+// ========================================
+
+function showLoginView() {
+
+    loginForm.classList.remove("hidden");
+
+    forgotButton.classList.remove("hidden");
+
+    resetRequestForm.classList.add("hidden");
+
+    newPasswordForm.classList.add("hidden");
+}
+
+// ========================================
+// PASSWORD RESET REQUEST
+// ========================================
+
+function showResetRequestView() {
+
+    loginForm.classList.add("hidden");
+
+    forgotButton.classList.add("hidden");
+
+    resetRequestForm.classList.remove("hidden");
+
+    newPasswordForm.classList.add("hidden");
+
+    document.getElementById("resetEmail").value =
+        document.getElementById("email").value.trim();
+
+    showMessage("", "#123b56");
+}
+
+// ========================================
+// NEW PASSWORD FORM
+// ========================================
+
+function showNewPasswordView() {
+
+    isPasswordRecovery = true;
+
+    loginForm.classList.add("hidden");
+
+    forgotButton.classList.add("hidden");
+
+    resetRequestForm.classList.add("hidden");
+
+    newPasswordForm.classList.remove("hidden");
+
+    showMessage(
+        "Enter and confirm your new password.",
+        "#123b56"
+    );
+}
+
+// ========================================
+// ADMINISTRATOR VERIFICATION
+// ========================================
+
+async function checkAdministrator(user) {
+
+    if (!user || user.id !== ADMIN_USER_ID) {
+
+        await supabaseClient.auth.signOut();
+
+        showMessage(
+            "Access denied. This account is not an authorised administrator.",
+            "red"
+        );
+
+        showLoginView();
+
+        return false;
+    }
+
+    showMessage(
+        "Administrator verified. Opening dashboard...",
+        "green"
+    );
+
+    // Redirect verified administrator to dashboard
+    window.location.replace("admin-dashboard.html");
+
+    return true;
+}
+
+// ========================================
+// FORGOT PASSWORD BUTTON
+// ========================================
+
+forgotButton.addEventListener(
+    "click",
+    showResetRequestView
+);
+
+// ========================================
+// BACK TO LOGIN BUTTON
+// ========================================
+
+document.getElementById("backToLoginButton")
+.addEventListener("click", function() {
+
+    showLoginView();
+
+    showMessage("", "#123b56");
+
+});
+
+// ========================================
+// ADMINISTRATOR LOGIN
+// ========================================
+
+loginForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        loginButton.disabled = true;
+
+        loginButton.textContent = "Signing in...";
+
+        showMessage(
+            "Checking your login details...",
+            "#123b56"
+        );
+
+        const email =
+            document.getElementById("email").value.trim();
+
+        const password =
+            document.getElementById("password").value;
+
+        try {
+
+            const { data, error } =
+                await supabaseClient.auth.signInWithPassword({
+
+                    email: email,
+
+                    password: password
+
+                });
+
+            if (error) throw error;
+
+            await checkAdministrator(data.user);
+
+        } catch (error) {
+
+            showMessage(
+                error.message ||
+                "Login failed. Please try again.",
+                "red"
+            );
+
+        } finally {
+
+            loginButton.disabled = false;
+
+            loginButton.textContent = "Sign In";
+
+        }
+
+    }
+);
+
+// ========================================
+// REQUEST PASSWORD RESET EMAIL
+// ========================================
+
+resetRequestForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const sendButton =
+            document.getElementById("sendResetButton");
+
+        const email =
+            document.getElementById("resetEmail").value.trim();
+
+        sendButton.disabled = true;
+
+        sendButton.textContent = "Sending...";
+
+        showMessage(
+            "Requesting password-reset email...",
+            "#123b56"
+        );
+
+        try {
+
+            const redirectUrl =
+                window.location.origin +
+                window.location.pathname;
+
+            const { error } =
+                await supabaseClient.auth.resetPasswordForEmail(
+                    email,
+                    {
+                        redirectTo: redirectUrl
+                    }
+                );
+
+            if (error) throw error;
+
+            showMessage(
+                "If this email belongs to an eligible IFEI-SL administrator account, a password-reset link has been sent. Please check the inbox and spam folder.",
+                "green"
+            );
+
+        } catch (error) {
+
+            showMessage(
+                error.message ||
+                "Unable to send the password-reset email. Please try again.",
+                "red"
+            );
+
+        } finally {
+
+            sendButton.disabled = false;
+
+            sendButton.textContent =
+                "Send Password Reset Email";
+
+        }
+
+    }
+);
+
+// ========================================
+// SAVE NEW PASSWORD
+// ========================================
+
+newPasswordForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        const saveButton =
+            document.getElementById("savePasswordButton");
+
+        const newPassword =
+            document.getElementById("newPassword").value;
+
+        const confirmPassword =
+            document.getElementById("confirmPassword").value;
+
+        if (newPassword.length < 8) {
+
+            showMessage(
+                "Please use a password with at least 8 characters.",
+                "red"
+            );
+
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+
+            showMessage(
+                "The two passwords do not match.",
+                "red"
+            );
+
+            return;
+        }
+
+        saveButton.disabled = true;
+
+        saveButton.textContent = "Saving...";
+
+        showMessage(
+            "Updating your password...",
+            "#123b56"
+        );
+
+        try {
+
+            const { error } =
+                await supabaseClient.auth.updateUser({
+
+                    password: newPassword
+
+                });
+
+            if (error) throw error;
+
+            await supabaseClient.auth.signOut();
+
+            isPasswordRecovery = false;
+
+            newPasswordForm.classList.add("hidden");
+
+            showLoginView();
+
+            document.getElementById("password").value = "";
+
+            document.getElementById("email").value =
+                document.getElementById("resetEmail").value.trim();
+
+            showMessage(
+                "Your password has been changed. You can now sign in with your new password.",
+                "green"
+            );
+
+        } catch (error) {
+
+            showMessage(
+                error.message ||
+                "Unable to update the password. Please use a fresh reset link and try again.",
+                "red"
+            );
+
+        } finally {
+
+            saveButton.disabled = false;
+
+            saveButton.textContent = "Save New Password";
+
+        }
+
+    }
+);
+
+// ========================================
+// PASSWORD RECOVERY EVENT
+// ========================================
+
+supabaseClient.auth.onAuthStateChange(
+    function(event) {
+
+        if (event === "PASSWORD_RECOVERY") {
+
+            showNewPasswordView();
+
+        }
+
+    }
+);
+
+// ========================================
+// CHECK EXISTING LOGIN SESSION
+// ========================================
+
+async function checkExistingSession() {
+
+    const { data, error } =
+        await supabaseClient.auth.getSession();
+
+    if (error) {
+
+        showMessage(error.message, "red");
+
+        return;
+    }
+
+    if (data.session && !isPasswordRecovery) {
+
+        await checkAdministrator(data.session.user);
+
+    }
+
+}
+
+// ========================================
+// START ADMIN LOGIN PAGE
+// ========================================
+
+checkExistingSession();
+
+</script>
+
+</body>
+</html>
