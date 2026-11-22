@@ -1,0 +1,564 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IFEI-SL | Programmes Management</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6f5;
+    color: #263746;
+}
+
+header {
+    background: #123b56;
+    color: white;
+    padding: 20px;
+}
+
+.header-inner {
+    max-width: 1050px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+header img {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    background: white;
+    padding: 4px;
+    border-radius: 7px;
+}
+
+header h1 { margin: 0; font-size: 21px; }
+header p { margin: 5px 0 0; font-size: 13px; }
+
+main {
+    max-width: 1050px;
+    margin: 30px auto;
+    padding: 0 18px;
+}
+
+.panel {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.05);
+}
+
+h2, h3 { color: #123b56; }
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 7px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5d9;
+    border-radius: 5px;
+    font-size: 15px;
+    font-family: Arial, sans-serif;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+button, .link-button {
+    border: none;
+    padding: 11px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.primary { background: #198754; color: white; }
+.secondary { background: #123b56; color: white; }
+.gold { background: #d6a84f; color: #123b56; }
+.danger { background: #b52b35; color: white; }
+.neutral { background: #e5ebee; color: #263746; }
+
+button:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.programme {
+    border: 1px solid #dce4e7;
+    border-left: 5px solid #198754;
+    border-radius: 6px;
+    padding: 18px;
+    margin-top: 15px;
+}
+
+.programme h3 { margin: 0 0 10px; }
+
+.programme p {
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.status {
+    display: none;
+    padding: 13px;
+    border-radius: 5px;
+    margin-top: 15px;
+    line-height: 1.5;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.active { background: #e1f3e8; color: #176b3a; }
+.inactive { background: #fce8e8; color: #a12626; }
+
+#loading {
+    text-align: center;
+    padding: 70px 15px;
+}
+
+#error {
+    display: none;
+    max-width: 800px;
+    margin: 35px auto;
+    padding: 25px;
+    background: white;
+    color: #a12626;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #687780;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-inner">
+        <img src="logo.png" alt="IFEI-SL Logo">
+        <div>
+            <h1>IFEI-SL Programmes Management</h1>
+            <p>Manage Organisational Programmes</p>
+        </div>
+    </div>
+</header>
+
+<div id="loading">
+    <h2>Checking administrator access...</h2>
+    <p>Please wait.</p>
+</div>
+
+<div id="error">
+    <h2>Access not available</h2>
+    <p id="errorMessage"></p>
+    <a class="link-button secondary" href="admin.html">Return to Login</a>
+</div>
+
+<main id="mainContent" style="display:none;">
+
+    <section class="panel">
+        <h2>Programmes Management</h2>
+        <p>Add, update and manage the programmes of IFEI-SL.</p>
+
+        <div id="status" class="status"></div>
+
+        <div class="actions">
+            <a class="link-button secondary" href="admin-dashboard.html">
+                Back to Dashboard
+            </a>
+            <a class="link-button secondary" href="index.html">
+                View Public Website
+            </a>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2 id="formTitle">Add New Programme</h2>
+
+        <form id="programmeForm">
+            <label for="programmeTitle">Programme Title</label>
+            <input
+                id="programmeTitle"
+                type="text"
+                maxlength="150"
+                required
+                placeholder="Enter programme title">
+
+            <label for="programmeDescription">Programme Description</label>
+            <textarea
+                id="programmeDescription"
+                maxlength="5000"
+                required
+                placeholder="Describe this programme"></textarea>
+
+            <div class="actions">
+                <button type="submit" class="primary" id="saveButton">
+                    Save Programme
+                </button>
+
+                <button
+                    type="button"
+                    class="neutral"
+                    id="cancelButton"
+                    onclick="cancelEdit()"
+                    style="display:none;">
+                    Cancel Edit
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Existing Programmes</h2>
+        <p>Programmes saved in the IFEI-SL database will appear below.</p>
+        <div id="programmeList">Loading programmes...</div>
+    </section>
+
+</main>
+
+<footer>
+    IFEI-SL | From economic exclusion to opportunity,
+    dignity and sustainable livelihoods.
+</footer>
+
+<script>
+const SUPABASE_URL =
+"https://nmpvnkaqwxguawtfihbn.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+"sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+
+const ADMIN_USER_ID =
+"c262096c-0665-4871-82e9-c7a1b7f2c1ce";
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+let editingId = null;
+let programmes = [];
+
+function showStatus(message, success = true) {
+    const box = document.getElementById("status");
+    box.style.display = "block";
+    box.style.background = success ? "#eaf5ee" : "#fdeaea";
+    box.style.color = success ? "#176b3a" : "#a12626";
+    box.textContent = message;
+}
+
+function showError(message) {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("mainContent").style.display = "none";
+    document.getElementById("error").style.display = "block";
+    document.getElementById("errorMessage").textContent = message;
+}
+
+async function checkAdministrator() {
+    try {
+        const { data, error } = await db.auth.getSession();
+
+        if (error) throw error;
+
+        if (!data.session) {
+            window.location.href = "admin.html";
+            return;
+        }
+
+        if (data.session.user.id !== ADMIN_USER_ID) {
+            await db.auth.signOut();
+            showError("This account is not authorised to manage programmes.");
+            return;
+        }
+
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+
+        await loadProgrammes();
+
+    } catch (error) {
+        showError("Unable to verify administrator access. Please return to login.");
+    }
+}
+
+async function loadProgrammes() {
+    const list = document.getElementById("programmeList");
+    list.textContent = "Loading programmes...";
+
+    const { data, error } = await db
+        .from("ifei_programmes")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+    if (error) {
+        list.textContent = "Could not load programmes: " + error.message;
+        return;
+    }
+
+    programmes = data || [];
+    displayProgrammes();
+}
+
+function displayProgrammes() {
+    const list = document.getElementById("programmeList");
+    list.replaceChildren();
+
+    if (programmes.length === 0) {
+        list.textContent = "No programmes have been added yet.";
+        return;
+    }
+
+    programmes.forEach(programme => {
+        const card = document.createElement("div");
+        card.className = "programme";
+
+        const heading = document.createElement("h3");
+        heading.textContent = programme.title;
+
+        const badge = document.createElement("span");
+        badge.className = "badge " +
+            (programme.is_active ? "active" : "inactive");
+        badge.textContent = programme.is_active ? "Active" : "Inactive";
+
+        const description = document.createElement("p");
+        description.textContent = programme.description || "";
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const editButton = document.createElement("button");
+        editButton.className = "gold";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", () => editProgramme(programme.id));
+
+        const toggleButton = document.createElement("button");
+        toggleButton.className = "secondary";
+        toggleButton.textContent = programme.is_active ? "Deactivate" : "Activate";
+        toggleButton.addEventListener("click", () => toggleProgramme(programme));
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "danger";
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => deleteProgramme(programme));
+
+        card.append(heading, badge, description);
+        actions.append(editButton, toggleButton, deleteButton);
+        card.append(actions);
+        list.append(card);
+    });
+}
+
+function makeSlug(title) {
+    return title
+        .toLowerCase()
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+document.getElementById("programmeForm")
+.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const title = document.getElementById("programmeTitle").value.trim();
+    const description = document.getElementById("programmeDescription").value.trim();
+    const button = document.getElementById("saveButton");
+
+    if (!title || !description) {
+        showStatus("Please enter both a title and description.", false);
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Saving...";
+
+    try {
+        const { data: sessionData, error: sessionError } =
+            await db.auth.getSession();
+
+        if (sessionError) throw sessionError;
+
+        if (!sessionData.session ||
+            sessionData.session.user.id !== ADMIN_USER_ID) {
+            throw new Error("Administrator access is required.");
+        }
+
+        if (editingId) {
+            const { error } = await db
+                .from("ifei_programmes")
+                .update({
+                    title: title,
+                    description: description,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", editingId);
+
+            if (error) throw error;
+
+            showStatus("Programme updated successfully.");
+
+        } else {
+            let slug = makeSlug(title);
+
+            if (!slug) {
+                throw new Error("Please enter a valid programme title.");
+            }
+
+            const { data: existing, error: slugError } = await db
+                .from("ifei_programmes")
+                .select("id")
+                .eq("slug", slug);
+
+            if (slugError) throw slugError;
+
+            if (existing && existing.length > 0) {
+                slug = slug + "-" + Date.now().toString().slice(-6);
+            }
+
+            const nextOrder = programmes.length
+                ? Math.max(...programmes.map(p => Number(p.display_order) || 0)) + 1
+                : 1;
+
+            const { error } = await db
+                .from("ifei_programmes")
+                .insert({
+                    title: title,
+                    slug: slug,
+                    description: description,
+                    display_order: nextOrder,
+                    is_active: true
+                });
+
+            if (error) throw error;
+
+            showStatus("New programme added successfully.");
+        }
+
+        cancelEdit();
+        await loadProgrammes();
+
+    } catch (error) {
+        showStatus("Save failed: " + error.message, false);
+
+    } finally {
+        button.disabled = false;
+        button.textContent = editingId ? "Update Programme" : "Save Programme";
+    }
+});
+
+function editProgramme(id) {
+    const programme = programmes.find(item => item.id === id);
+
+    if (!programme) return;
+
+    editingId = id;
+
+    document.getElementById("programmeTitle").value = programme.title;
+    document.getElementById("programmeDescription").value =
+        programme.description || "";
+
+    document.getElementById("formTitle").textContent = "Edit Programme";
+    document.getElementById("saveButton").textContent = "Update Programme";
+    document.getElementById("cancelButton").style.display = "inline-block";
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function cancelEdit() {
+    editingId = null;
+    document.getElementById("programmeForm").reset();
+    document.getElementById("formTitle").textContent = "Add New Programme";
+    document.getElementById("saveButton").textContent = "Save Programme";
+    document.getElementById("cancelButton").style.display = "none";
+}
+
+async function toggleProgramme(programme) {
+    const newStatus = !programme.is_active;
+
+    if (!confirm(
+        "Do you want to " + (newStatus ? "activate" : "deactivate") +
+        " this programme?"
+    )) return;
+
+    const { error } = await db
+        .from("ifei_programmes")
+        .update({
+            is_active: newStatus,
+            updated_at: new Date().toISOString()
+        })
+        .eq("id", programme.id);
+
+    if (error) {
+        showStatus("Could not update programme: " + error.message, false);
+        return;
+    }
+
+    showStatus("Programme status updated.");
+    await loadProgrammes();
+}
+
+async function deleteProgramme(programme) {
+    if (!confirm(
+        'Are you sure you want to delete "' +
+        programme.title +
+        '"? This cannot be undone.'
+    )) return;
+
+    const { error } = await db
+        .from("ifei_programmes")
+        .delete()
+        .eq("id", programme.id);
+
+    if (error) {
+        showStatus("Could not delete programme: " + error.message, false);
+        return;
+    }
+
+    if (editingId === programme.id) cancelEdit();
+
+    showStatus("Programme deleted.");
+    await loadProgrammes();
+}
+
+checkAdministrator();
+</script>
+
+</body>
+</html>
