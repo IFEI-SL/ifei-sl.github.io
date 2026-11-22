@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IFEI-SL Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6f8;
+    color: #263746;
+}
+
+header {
+    background: #123b56;
+    color: white;
+    padding: 28px 20px;
+    text-align: center;
+}
+
+header h1 { margin: 0 0 8px; }
+
+header p { margin: 0; }
+
+main {
+    max-width: 1050px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.welcome {
+    background: white;
+    padding: 22px;
+    border-radius: 9px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 9px #00000012;
+}
+
+h2 { color: #123b56; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 9px;
+    box-shadow: 0 2px 9px #00000012;
+    border-top: 4px solid #d6a84f;
+}
+
+.card h3 {
+    color: #123b56;
+    margin-top: 0;
+}
+
+.card p {
+    line-height: 1.5;
+    min-height: 45px;
+}
+
+.card a {
+    display: inline-block;
+    background: #198754;
+    color: white;
+    text-decoration: none;
+    padding: 11px 15px;
+    border-radius: 5px;
+    margin-top: 8px;
+}
+
+.card a:hover { background: #146c43; }
+
+.logout {
+    display: inline-block;
+    background: #c0392b;
+    color: white;
+    border: 0;
+    padding: 11px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #687782;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>IFEI-SL Administration</h1>
+    <p>Inclusive Financial Empowerment Initiative – Sierra Leone</p>
+</header>
+
+<main>
+
+    <section class="welcome">
+        <h2>Administrator Dashboard</h2>
+        <p>Welcome. Select a section below to manage your organisation's website.</p>
+        <p id="adminStatus">Checking administrator access...</p>
+    </section>
+
+    <section class="grid">
+
+        <div class="card">
+            <h3>Website Content</h3>
+            <p>Manage About Us, Vision, Mission and Impact information.</p>
+            <a href="content-management.html">Manage Content</a>
+        </div>
+
+        <div class="card">
+            <h3>Programmes</h3>
+            <p>Add, edit, activate or deactivate organisation programmes.</p>
+            <a href="programmes-management.html">Manage Programmes</a>
+        </div>
+
+        <div class="card">
+            <h3>Activities</h3>
+            <p>Publish and manage photos, videos and organisation updates.</p>
+            <a href="activities-management.html">Manage Activities</a>
+        </div>
+
+        <div class="card">
+            <h3>Team Members</h3>
+            <p>Add, edit, activate or deactivate team members.</p>
+            <a href="team-management.html">Manage Team</a>
+        </div>
+
+    </section>
+
+    <button class="logout" id="logoutButton">Log Out</button>
+
+</main>
+
+<footer>
+    IFEI-SL Administration System
+</footer>
+
+<script>
+const SUPABASE_URL = "https://nmpvnkaqwxguawtfihbn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+const ADMIN_ID = "c262096c-0665-4871-82e9-c7a1b7f2c1ce";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function checkAdmin() {
+    const status = document.getElementById("adminStatus");
+
+    const { data: { session }, error } = await db.auth.getSession();
+
+    if (error || !session || session.user.id !== ADMIN_ID) {
+        alert("Please log in using the authorised IFEI-SL administrator account.");
+        window.location.href = "admin.html";
+        return;
+    }
+
+    status.textContent = "Administrator access verified.";
+}
+
+document.getElementById("logoutButton").addEventListener("click", async () => {
+    const { error } = await db.auth.signOut();
+
+    if (error) {
+        alert("Could not log out: " + error.message);
+        return;
+    }
+
+    window.location.href = "admin.html";
+});
+
+checkAdmin();
+</script>
+
+</body>
+</html>
