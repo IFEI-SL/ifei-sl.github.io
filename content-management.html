@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IFEI-SL Website Content Management</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6fa;
+    color: #172033;
+}
+
+.top {
+    background: #123b66;
+    color: white;
+    padding: 22px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.top h1 {
+    font-size: 22px;
+    margin: 0;
+}
+
+.top a {
+    color: white;
+    text-decoration: none;
+    background: #245987;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.wrap {
+    max-width: 1000px;
+    margin: 28px auto;
+    padding: 0 16px;
+}
+
+.note {
+    background: #fff4d6;
+    border: 1px solid #f0d27b;
+    padding: 14px;
+    border-radius: 10px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.panel {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 3px 14px #0000000c;
+    margin-bottom: 20px;
+}
+
+.panel h2 {
+    margin-top: 0;
+    color: #123b66;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 7px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+    resize: vertical;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #176b45;
+    color: white;
+}
+
+button.secondary {
+    background: #526579;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#status {
+    font-weight: bold;
+    margin-top: 14px;
+    line-height: 1.5;
+}
+
+.small {
+    color: #526579;
+    font-size: 14px;
+    line-height: 1.5;
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+    <h1>IFEI-SL Website Content Management</h1>
+    <a href="admin-dashboard.html">← Back to Dashboard</a>
+</header>
+
+<main class="wrap">
+
+    <div class="note">
+        <strong>Important:</strong>
+        The wording shown below is taken from the existing public website.
+        If a database field is empty, the existing website wording will be
+        displayed here for review. Nothing is saved until you click
+        "Save Website Content".
+    </div>
+
+    <form id="contentForm">
+
+        <section class="panel">
+            <h2>About Us</h2>
+            <label for="aboutUs">About Us text</label>
+            <textarea id="aboutUs"></textarea>
+        </section>
+
+        <section class="panel">
+            <h2>Vision</h2>
+            <label for="vision">Vision statement</label>
+            <textarea id="vision"></textarea>
+        </section>
+
+        <section class="panel">
+            <h2>Mission</h2>
+            <label for="mission">Mission statement</label>
+            <textarea id="mission"></textarea>
+        </section>
+
+        <section class="panel">
+            <h2>Our Impact</h2>
+            <p class="small">
+                Enter the approved Our Impact text that should appear on
+                the public website. This field will remain empty if no
+                impact content has been saved.
+            </p>
+            <label for="impact">Our Impact text</label>
+            <textarea id="impact"></textarea>
+        </section>
+
+        <div class="actions">
+            <button type="submit" id="saveButton">
+                Save Website Content
+            </button>
+
+            <button class="secondary" type="button" id="reloadButton">
+                Reload Saved Content
+            </button>
+        </div>
+
+        <p id="status" role="status"></p>
+
+    </form>
+</main>
+
+<script>
+const SUPABASE_URL = "https://nmpvnkaqwxguawtfihbn.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+"sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+
+const ADMIN_USER_ID = "c262096c-0665-4871-82e9-c7a1b7f2c1ce";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
+
+const defaults = {
+    about: `Inclusive Financial Empowerment Initiative (IFEI) is a Sierra Leone-based initiative focused on inclusive financial empowerment, entrepreneurship and sustainable livelihoods. IFEI gives particular attention to persons with disabilities, women, youth, low-income households, vulnerable communities and small-scale entrepreneurs. Our approach goes beyond short-term credit by combining financial literacy, savings, entrepreneurship, productive assets, mentorship, market linkages and follow-up support.`,
+
+    vision: `A Sierra Leone where underserved people, particularly persons with disabilities, women and young entrepreneurs, have fair access to financial knowledge, economic opportunities, productive resources and sustainable livelihoods.`,
+
+    mission: `To expand inclusive financial and economic opportunities by combining financial literacy, savings, entrepreneurship, SME development, skills, appropriate financing, productive assets, mentorship and market connections, while working with communities and partners to reduce barriers to participation.`
+};
+
+const contentFields = [
+    { id: "aboutUs", key: "about_us", fallback: defaults.about },
+    { id: "vision", key: "vision", fallback: defaults.vision },
+    { id: "mission", key: "mission", fallback: defaults.mission },
+    { id: "impact", key: "impact", fallback: "" }
+];
+
+const statusElement = document.getElementById("status");
+const saveButton = document.getElementById("saveButton");
+
+function setStatus(message) {
+    statusElement.textContent = message;
+}
+
+function getContentText(value) {
+    if (value === null || value === undefined) {
+        return "";
+    }
+
+    if (typeof value === "object") {
+        return typeof value.text === "string" ? value.text : "";
+    }
+
+    return String(value);
+}
+
+async function checkAdminSession() {
+    try {
+        const { data, error } =
+            await supabaseClient.auth.getSession();
+
+        if (error) throw error;
+
+        if (!data.session) {
+            window.location.replace("login.html");
+            return false;
+        }
+
+        if (data.session.user.id !== ADMIN_USER_ID) {
+            setStatus("Access denied. This account is not authorised.");
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error(error);
+        setStatus(
+            "Could not verify administrator login. Check your internet connection."
+        );
+        return false;
+    }
+}
+
+async function loadContent() {
+    setStatus("Loading website content...");
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("ifei_site_content")
+            .select("content_key, content_value");
+
+        if (error) throw error;
+
+        const savedValues = {};
+
+        (data || []).forEach(row => {
+            savedValues[row.content_key] =
+                getContentText(row.content_value);
+        });
+
+        contentFields.forEach(field => {
+            const savedText = savedValues[field.key];
+
+            document.getElementById(field.id).value =
+                savedText && savedText.trim() !== ""
+                    ? savedText
+                    : field.fallback;
+        });
+
+        setStatus(
+            "Content loaded. Review the wording before saving. " +
+            "Empty database fields are showing the public website defaults."
+        );
+
+    } catch (error) {
+        console.error(error);
+        setStatus(
+            "Could not load content from Supabase. Please check your connection and try again."
+        );
+    }
+}
+
+document.getElementById("contentForm").addEventListener(
+    "submit",
+    async function(event) {
+        event.preventDefault();
+
+        saveButton.disabled = true;
+        setStatus("Saving website content to Supabase...");
+
+        try {
+            const records = contentFields.map(field => ({
+                content_key: field.key,
+                content_value: {
+                    text: document.getElementById(field.id).value.trim()
+                },
+                updated_at: new Date().toISOString()
+            }));
+
+            const { error } = await supabaseClient
+                .from("ifei_site_content")
+                .upsert(records, {
+                    onConflict: "content_key"
+                });
+
+            if (error) throw error;
+
+            setStatus(
+                "Website content saved successfully to Supabase."
+            );
+
+        } catch (error) {
+            console.error(error);
+            setStatus(
+                "Save failed. Please check your Supabase connection and permissions."
+            );
+        } finally {
+            saveButton.disabled = false;
+        }
+    }
+);
+
+document.getElementById("reloadButton").addEventListener(
+    "click",
+    loadContent
+);
+
+checkAdminSession().then(isAdmin => {
+    if (isAdmin) {
+        loadContent();
+    }
+});
+</script>
+
+</body>
+</html>
