@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Management - IFEI-SL</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6f8;
+    color: #263746;
+}
+header {
+    background: #123b56;
+    color: white;
+    padding: 22px;
+    text-align: center;
+}
+main {
+    max-width: 950px;
+    margin: 25px auto;
+    padding: 20px;
+}
+.panel {
+    background: white;
+    padding: 22px;
+    margin-bottom: 22px;
+    border-radius: 9px;
+    box-shadow: 0 2px 9px #00000012;
+}
+h2 { color: #123b56; margin-top: 0; }
+label {
+    display: block;
+    margin: 13px 0 6px;
+    font-weight: bold;
+}
+input, textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #cbd5dc;
+    border-radius: 5px;
+    font-size: 15px;
+}
+textarea { min-height: 90px; resize: vertical; }
+button {
+    border: 0;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px 4px 5px 0;
+    font-weight: bold;
+}
+.primary { background: #198754; color: white; }
+.secondary { background: #123b56; color: white; }
+.danger { background: #c0392b; color: white; }
+.neutral { background: #e5e9ed; color: #263746; }
+.member {
+    border: 1px solid #dce3e8;
+    padding: 16px;
+    border-radius: 7px;
+    margin: 12px 0;
+}
+.member h3 { margin: 0 0 7px; color: #123b56; }
+.member p { margin: 6px 0; }
+.status { font-size: 13px; color: #198754; font-weight: bold; }
+#message { margin: 12px 0; font-weight: bold; }
+.back { color: white; }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>IFEI-SL Team Management</h1>
+    <p>Manage organisation team members</p>
+    <a class="back" href="admin-dashboard.html">Back to Dashboard</a>
+</header>
+
+<main>
+
+<div class="panel">
+    <h2 id="formHeading">Add Team Member</h2>
+
+    <form id="teamForm">
+        <label for="memberName">Full Name</label>
+        <input id="memberName" required maxlength="150">
+
+        <label for="memberPosition">Position</label>
+        <input id="memberPosition" required maxlength="150">
+
+        <label for="memberBio">Biography / Description</label>
+        <textarea id="memberBio"></textarea>
+
+        <label for="memberPhoto">Photo URL (Optional)</label>
+        <input id="memberPhoto" type="url" placeholder="https://example.com/photo.jpg">
+
+        <label for="memberOrder">Display Order</label>
+        <input id="memberOrder" type="number" min="0" value="0">
+
+        <div style="margin-top:18px;">
+            <button class="primary" id="saveButton" type="submit">Save Team Member</button>
+            <button class="neutral" type="button" id="cancelButton" hidden>Cancel Edit</button>
+        </div>
+    </form>
+
+    <div id="message" role="status"></div>
+</div>
+
+<div class="panel">
+    <h2>Existing Team Members</h2>
+    <div id="teamList">Loading team members...</div>
+</div>
+
+</main>
+
+<script>
+const SUPABASE_URL = "https://nmpvnkaqwxguawtfihbn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+const ADMIN_ID = "c262096c-0665-4871-82e9-c7a1b7f2c1ce";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const form = document.getElementById("teamForm");
+const message = document.getElementById("message");
+const teamList = document.getElementById("teamList");
+const saveButton = document.getElementById("saveButton");
+const cancelButton = document.getElementById("cancelButton");
+
+let editingId = null;
+let members = [];
+
+function showMessage(text, error = false) {
+    message.textContent = text;
+    message.style.color = error ? "#c0392b" : "#198754";
+}
+
+async function verifyAdmin() {
+    const { data: { session }, error } = await db.auth.getSession();
+
+    if (error || !session || session.user.id !== ADMIN_ID) {
+        alert("Please log in using the authorised IFEI-SL administrator account.");
+        window.location.href = "admin.html";
+        return false;
+    }
+    return true;
+}
+
+async function loadMembers() {
+    teamList.textContent = "Loading team members...";
+
+    const { data, error } = await db
+        .from("ifei_team_members")
+        .select("*")
+        .order("display_order", { ascending: true });
+
+    if (error) {
+        teamList.textContent = "Could not load team members: " + error.message;
+        return;
+    }
+
+    members = data || [];
+    renderMembers();
+}
+
+function renderMembers() {
+    teamList.replaceChildren();
+
+    if (members.length === 0) {
+        teamList.textContent = "No team members have been added yet.";
+        return;
+    }
+
+    members.forEach(member => {
+        const card = document.createElement("div");
+        card.className = "member";
+
+        const name = document.createElement("h3");
+        name.textContent = member.name || "";
+
+        const position = document.createElement("p");
+        position.textContent = member.position || "";
+
+        const bio = document.createElement("p");
+        bio.textContent = member.bio || "";
+
+        const status = document.createElement("p");
+        status.className = "status";
+        status.textContent = member.is_active ? "Active" : "Inactive";
+
+        card.append(name, position, bio, status);
+
+        const edit = document.createElement("button");
+        edit.className = "secondary";
+        edit.textContent = "Edit";
+        edit.addEventListener("click", () => editMember(member.id));
+
+        const toggle = document.createElement("button");
+        toggle.className = "neutral";
+        toggle.textContent = member.is_active ? "Deactivate" : "Activate";
+        toggle.addEventListener("click", () => toggleMember(member));
+
+        const remove = document.createElement("button");
+        remove.className = "danger";
+        remove.textContent = "Delete";
+        remove.addEventListener("click", () => deleteMember(member));
+
+        card.append(edit, toggle, remove);
+        teamList.appendChild(card);
+    });
+}
+
+form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    saveButton.disabled = true;
+    showMessage("Saving...");
+
+    const record = {
+        name: document.getElementById("memberName").value.trim(),
+        position: document.getElementById("memberPosition").value.trim(),
+        bio: document.getElementById("memberBio").value.trim(),
+        photo_url: document.getElementById("memberPhoto").value.trim() || null,
+        display_order: Number(document.getElementById("memberOrder").value) || 0
+    };
+
+    let result;
+
+    if (editingId) {
+        result = await db
+            .from("ifei_team_members")
+            .update(record)
+            .eq("id", editingId);
+    } else {
+        result = await db
+            .from("ifei_team_members")
+            .insert(record);
+    }
+
+    saveButton.disabled = false;
+
+    if (result.error) {
+        showMessage("Error: " + result.error.message, true);
+        return;
+    }
+
+    showMessage(editingId ? "Team member updated." : "Team member added.");
+    resetForm();
+    await loadMembers();
+});
+
+function editMember(id) {
+    const member = members.find(item => item.id === id);
+    if (!member) return;
+
+    editingId = id;
+
+    document.getElementById("memberName").value = member.name || "";
+    document.getElementById("memberPosition").value = member.position || "";
+    document.getElementById("memberBio").value = member.bio || "";
+    document.getElementById("memberPhoto").value = member.photo_url || "";
+    document.getElementById("memberOrder").value = member.display_order ?? 0;
+
+    document.getElementById("formHeading").textContent = "Edit Team Member";
+    saveButton.textContent = "Update Team Member";
+    cancelButton.hidden = false;
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetForm() {
+    form.reset();
+    editingId = null;
+    document.getElementById("formHeading").textContent = "Add Team Member";
+    saveButton.textContent = "Save Team Member";
+    cancelButton.hidden = true;
+}
+
+cancelButton.addEventListener("click", resetForm);
+
+async function toggleMember(member) {
+    const action = member.is_active ? "deactivate" : "activate";
+
+    if (!confirm("Are you sure you want to " + action + " " + member.name + "?")) return;
+
+    const { error } = await db
+        .from("ifei_team_members")
+        .update({ is_active: !member.is_active })
+        .eq("id", member.id);
+
+    if (error) {
+        showMessage("Error: " + error.message, true);
+        return;
+    }
+
+    showMessage("Team member status updated.");
+    await loadMembers();
+}
+
+async function deleteMember(member) {
+    if (!confirm("Permanently delete " + member.name + "? This cannot be undone.")) return;
+
+    const { error } = await db
+        .from("ifei_team_members")
+        .delete()
+        .eq("id", member.id);
+
+    if (error) {
+        showMessage("Error: " + error.message, true);
+        return;
+    }
+
+    showMessage("Team member deleted.");
+    await loadMembers();
+}
+
+(async function startPage() {
+    const allowed = await verifyAdmin();
+    if (allowed) await loadMembers();
+})();
+</script>
+
+</body>
+</html>
