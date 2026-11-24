@@ -850,6 +850,22 @@ nav a:hover, nav a:focus-visible {
 }
 .program-card h3 { font-size: 19px; line-height: 1.4; }
 .program-card p, .service-card p { color: var(--muted); font-size: 14px; }
+.program-image {
+    display: block;
+    width: 100%;
+    height: 190px;
+    margin: 0 0 20px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #edf2f5;
+}
+.program-additional-text {
+    margin-top: 13px;
+    padding-top: 13px;
+    border-top: 1px solid var(--line);
+    color: #405766 !important;
+    white-space: pre-line;
+}
 
 .services { background: var(--light); }
 .service-grid { gap: 22px; }
@@ -1166,7 +1182,7 @@ a:focus-visible, button:focus-visible {
     <div class="container">
         <div class="section-heading">
             <span>WHAT WE DO</span>
-            <h2>Our Six Core Programme Areas</h2>
+            <h2>Our Seven Core Programme Areas</h2>
             <p>
                 Our programmes are designed to strengthen financial
                 knowledge, entrepreneurship and inclusive economic
@@ -1612,7 +1628,7 @@ function programmeIcon(programme) {
 async function loadProgrammes() {
     const { data, error } = await ifeiDb
         .from("ifei_programmes")
-        .select("slug, title, description, display_order, is_active")
+        .select("slug, title, description, image_url, additional_text, display_order, is_active")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
 
@@ -1637,10 +1653,33 @@ async function loadProgrammes() {
         const title = document.createElement("h3");
         title.textContent = programme.title || "Programme";
 
+        // Keep the original programme description unchanged.
         const description = document.createElement("p");
+        description.className = "program-description";
         description.textContent = programme.description || "";
 
+        // Display the programme image separately when one has been saved.
+        const imageUrl = safeWebUrl(programme.image_url);
+        if (imageUrl) {
+            const image = document.createElement("img");
+            image.className = "program-image";
+            image.src = imageUrl;
+            image.alt = (programme.title || "IFEI-SL programme") + " photograph";
+            image.loading = "lazy";
+            image.onerror = () => image.remove();
+            card.appendChild(image);
+        }
+
         card.append(icon, title, description);
+
+        // Additional information is shown underneath the original description.
+        if (programme.additional_text && String(programme.additional_text).trim()) {
+            const additional = document.createElement("p");
+            additional.className = "program-additional-text";
+            additional.textContent = programme.additional_text;
+            card.appendChild(additional);
+        }
+
         grid.appendChild(card);
     });
 }
