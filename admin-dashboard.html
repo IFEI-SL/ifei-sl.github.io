@@ -8,142 +8,121 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f3f6f8;
-    color: #263746;
-}
-
-header {
-    background: #123b56;
-    color: white;
-    padding: 28px 20px;
-    text-align: center;
-}
-
-header h1 { margin: 0 0 8px; }
-
-header p { margin: 0; }
-
-main {
-    max-width: 1050px;
-    margin: 30px auto;
-    padding: 20px;
-}
-
-.welcome {
-    background: white;
-    padding: 22px;
-    border-radius: 9px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 9px #00000012;
-}
-
-h2 { color: #123b56; }
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-}
-
-.card {
-    background: white;
-    padding: 25px;
-    border-radius: 9px;
-    box-shadow: 0 2px 9px #00000012;
-    border-top: 4px solid #d6a84f;
-}
-
-.card h3 {
-    color: #123b56;
-    margin-top: 0;
-}
-
-.card p {
-    line-height: 1.5;
-    min-height: 45px;
-}
-
-.card a {
-    display: inline-block;
-    background: #198754;
-    color: white;
-    text-decoration: none;
-    padding: 11px 15px;
-    border-radius: 5px;
-    margin-top: 8px;
-}
-
-.card a:hover { background: #146c43; }
-
-.logout {
-    display: inline-block;
-    background: #c0392b;
-    color: white;
-    border: 0;
-    padding: 11px 18px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-}
-
-footer {
-    text-align: center;
-    padding: 20px;
-    color: #687782;
-}
+*{box-sizing:border-box}
+:root{--navy:#123b56;--green:#198754;--gold:#d6a84f;--ink:#263746;--muted:#667784;--line:#e5ebef;--surface:#fff}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6f8;color:var(--ink)}
+header{background:linear-gradient(125deg,#123b56,#1b526d);color:#fff;padding:30px 22px}
+.header-inner{max-width:1120px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.brand h1{margin:0 0 7px;font-size:clamp(24px,3vw,32px)}
+.brand p{margin:0;color:#e1ebf0}
+.header-tag{border:1px solid #ffffff55;border-radius:30px;padding:9px 14px;font-size:13px;color:#f5f8fa}
+main{max-width:1120px;margin:28px auto;padding:0 20px 30px}
+.welcome{background:var(--surface);padding:24px;border-radius:14px;margin-bottom:22px;box-shadow:0 3px 14px #16394b0d;border:1px solid var(--line)}
+.welcome-top{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap}
+.welcome h2{color:var(--navy);margin:0 0 8px;font-size:23px}
+.welcome p{margin:0;line-height:1.55;color:var(--muted)}
+#adminStatus{margin-top:14px;font-size:13px;color:var(--green);font-weight:700}
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:28px 0 14px}
+.section-heading h2{color:var(--navy);font-size:20px;margin:0}
+.section-heading p{font-size:13px;color:var(--muted);margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:19px;box-shadow:0 3px 12px #16394b08}
+.stat-label{font-size:13px;color:var(--muted);font-weight:700}
+.stat-value{font-size:30px;line-height:1.2;font-weight:700;color:var(--navy);margin:10px 0 4px}
+.stat-note{font-size:12px;color:#7a8993}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:#fff;padding:22px;border-radius:13px;border:1px solid var(--line);box-shadow:0 3px 12px #16394b08;border-top:4px solid var(--gold);display:flex;flex-direction:column;align-items:flex-start}
+.card h3{color:var(--navy);margin:0 0 8px;font-size:18px}
+.card p{line-height:1.55;color:var(--muted);margin:0 0 16px;flex:1}
+.card a{display:inline-block;background:var(--green);color:#fff;text-decoration:none;padding:11px 16px;border-radius:7px;font-weight:700;font-size:14px}
+.card a:hover{background:#146c43}
+.actions{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:24px}
+.logout{background:#b9382c;color:#fff;border:0;padding:11px 18px;border-radius:7px;cursor:pointer;font-weight:700}
+.logout:hover{background:#962d24}
+.refresh{background:#eaf1f5;color:var(--navy);border:1px solid #d8e2e8;padding:10px 14px;border-radius:7px;cursor:pointer;font-weight:700}
+.refresh:hover{background:#dfeaf0}
+footer{text-align:center;padding:22px;color:#71808a;font-size:13px}
+@media(max-width:700px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}main{margin:18px auto;padding:0 14px 24px}header{padding:24px 16px}.welcome{padding:19px}.section-heading{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 
 <body>
 
 <header>
-    <h1>IFEI-SL Administration</h1>
-    <p>Inclusive Financial Empowerment Initiative – Sierra Leone</p>
+    <div class="header-inner">
+        <div class="brand">
+            <h1>IFEI-SL Administration</h1>
+            <p>Inclusive Financial Empowerment Initiative – Sierra Leone</p>
+        </div>
+        <div class="header-tag">ADMINISTRATION PORTAL</div>
+    </div>
 </header>
 
 <main>
-
     <section class="welcome">
-        <h2>Administrator Dashboard</h2>
-        <p>Welcome. Select a section below to manage your organisation's website.</p>
+        <div class="welcome-top">
+            <div>
+                <h2>Administrator Dashboard</h2>
+                <p>Welcome. Use the sections below to manage the IFEI-SL website.</p>
+            </div>
+            <button class="refresh" id="refreshButton" type="button">Refresh summaries</button>
+        </div>
         <p id="adminStatus">Checking administrator access...</p>
     </section>
 
-    <section class="grid">
+    <div class="section-heading">
+        <h2>Website Overview</h2>
+        <p>Current records available to this dashboard</p>
+    </div>
+    <section class="stats" aria-label="Website summaries">
+        <div class="stat">
+            <div class="stat-label">Active Programmes</div>
+            <div class="stat-value" id="programmeCount">—</div>
+            <div class="stat-note">From the IFEI-SL programmes database</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Activities</div>
+            <div class="stat-value" id="activityCount">—</div>
+            <div class="stat-note">From the IFEI-SL activities database</div>
+        </div>
+        <div class="stat">
+            <div class="stat-label">Active Team Members</div>
+            <div class="stat-value" id="teamCount">—</div>
+            <div class="stat-note">From the IFEI-SL team database</div>
+        </div>
+    </section>
 
+    <div class="section-heading">
+        <h2>Management Sections</h2>
+        <p>Choose an area to manage</p>
+    </div>
+    <section class="grid">
         <div class="card">
             <h3>Website Content</h3>
             <p>Manage About Us, Vision, Mission and Impact information.</p>
             <a href="content-management.html">Manage Content</a>
         </div>
-
         <div class="card">
             <h3>Programmes</h3>
-            <p>Add, edit, activate or deactivate organisation programmes.</p>
+            <p>Add, edit, activate or deactivate organisation programmes, including programme images and additional information.</p>
             <a href="programmes-management.html">Manage Programmes</a>
         </div>
-
         <div class="card">
             <h3>Activities</h3>
             <p>Publish and manage photos, videos and organisation updates.</p>
             <a href="activities-management.html">Manage Activities</a>
         </div>
-
         <div class="card">
             <h3>Team Members</h3>
-            <p>Add, edit, activate or deactivate team members.</p>
+            <p>Add, edit, activate or deactivate team members and manage their profiles.</p>
             <a href="team-management.html">Manage Team</a>
         </div>
-
     </section>
 
-    <button class="logout" id="logoutButton">Log Out</button>
-
+    <div class="actions">
+        <span class="stat-note">IFEI-SL • Administration</span>
+        <button class="logout" id="logoutButton" type="button">Log Out</button>
+    </div>
 </main>
 
 <footer>
@@ -159,17 +138,84 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function checkAdmin() {
     const status = document.getElementById("adminStatus");
-
     const { data: { session }, error } = await db.auth.getSession();
 
     if (error || !session || session.user.id !== ADMIN_ID) {
         alert("Please log in using the authorised IFEI-SL administrator account.");
         window.location.href = "admin.html";
-        return;
+        return false;
     }
 
     status.textContent = "Administrator access verified.";
+    await loadDashboardSummaries();
+    return true;
 }
+
+async function loadDashboardSummaries() {
+    const programmeCount = document.getElementById("programmeCount");
+    const activityCount = document.getElementById("activityCount");
+    const teamCount = document.getElementById("teamCount");
+    const status = document.getElementById("adminStatus");
+
+    programmeCount.textContent = "…";
+    activityCount.textContent = "…";
+    teamCount.textContent = "…";
+
+    try {
+        // Read-only counts: these queries do not add, edit or delete records.
+        const [programmesResult, activitiesResult, teamResult] = await Promise.all([
+            db.from("ifei_programmes")
+                .select("id", { count: "exact", head: true })
+                .eq("is_active", true),
+
+            db.from("ifei_activities")
+                .select("id", { count: "exact", head: true }),
+
+            db.from("ifei_team_members")
+                .select("id", { count: "exact", head: true })
+                .eq("is_active", true)
+        ]);
+
+        programmeCount.textContent = programmesResult.error
+            ? "Error"
+            : String(programmesResult.count ?? 0);
+
+        activityCount.textContent = activitiesResult.error
+            ? "Error"
+            : String(activitiesResult.count ?? 0);
+
+        teamCount.textContent = teamResult.error
+            ? "Error"
+            : String(teamResult.count ?? 0);
+
+        const problems = [];
+        if (programmesResult.error) {
+            console.error("Programmes count error:", programmesResult.error);
+            problems.push("Programmes: " + programmesResult.error.message);
+        }
+        if (activitiesResult.error) {
+            console.error("Activities count error:", activitiesResult.error);
+            problems.push("Activities: " + activitiesResult.error.message);
+        }
+        if (teamResult.error) {
+            console.error("Team count error:", teamResult.error);
+            problems.push("Team: " + teamResult.error.message);
+        }
+
+        status.textContent = problems.length
+            ? "Administrator access verified. Database issue: " + problems.join(" | ")
+            : "Administrator access verified. Database summaries loaded.";
+    } catch (error) {
+        console.error("Dashboard summary error:", error);
+        programmeCount.textContent = "Error";
+        activityCount.textContent = "Error";
+        teamCount.textContent = "Error";
+        status.textContent = "Administrator access verified, but the dashboard could not load summaries: " +
+            (error && error.message ? error.message : String(error));
+    }
+}
+
+document.getElementById("refreshButton").addEventListener("click", loadDashboardSummaries);
 
 document.getElementById("logoutButton").addEventListener("click", async () => {
     const { error } = await db.auth.signOut();
