@@ -1,234 +1,2035 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IFEI-SL Admin Dashboard</title>
+<meta name="description" content="Inclusive Financial Empowerment Initiative Sierra Leone promotes financial inclusion, entrepreneurship, disability inclusion and sustainable livelihoods for underserved communities across Sierra Leone.">
+<meta name="author" content="Inclusive Financial Empowerment Initiative Sierra Leone">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://ifei-sl.github.io/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Inclusive Financial Empowerment Initiative Sierra Leone">
+<meta property="og:title" content="Inclusive Financial Empowerment Initiative Sierra Leone">
+<meta property="og:description" content="Promoting financial inclusion, entrepreneurship, disability inclusion and sustainable livelihoods across Sierra Leone.">
+<meta property="og:url" content="https://ifei-sl.github.io/">
+<meta property="og:image" content="https://ifei-sl.github.io/logo.png">
+
+<title>Inclusive Financial Empowerment Initiative Sierra Leone</title>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://ifei-sl.github.io/#organization",
+      "name": "Inclusive Financial Empowerment Initiative Sierra Leone",
+      "alternateName": "IFEI-SL",
+      "url": "https://ifei-sl.github.io/",
+      "logo": "https://ifei-sl.github.io/logo.png",
+      "email": "ifeisierraleone@gmail.com",
+      "telephone": [
+        "+23276743447",
+        "+23275675449",
+        "+23276724566"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "439A Main Bai Bureh Road, Allen Town Market",
+        "addressLocality": "Freetown",
+        "addressCountry": "SL"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://ifei-sl.github.io/#website",
+      "url": "https://ifei-sl.github.io/",
+      "name": "Inclusive Financial Empowerment Initiative Sierra Leone",
+      "alternateName": "IFEI-SL",
+      "publisher": {
+        "@id": "https://ifei-sl.github.io/#organization"
+      }
+    }
+  ]
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{box-sizing:border-box}
-:root{--navy:#123b56;--green:#198754;--gold:#d6a84f;--ink:#263746;--muted:#667784;--line:#e5ebef;--surface:#fff}
-body{margin:0;font-family:Arial,sans-serif;background:#f3f6f8;color:var(--ink)}
-header{background:linear-gradient(125deg,#123b56,#1b526d);color:#fff;padding:30px 22px}
-.header-inner{max-width:1120px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
-.brand h1{margin:0 0 7px;font-size:clamp(24px,3vw,32px)}
-.brand p{margin:0;color:#e1ebf0}
-.header-tag{border:1px solid #ffffff55;border-radius:30px;padding:9px 14px;font-size:13px;color:#f5f8fa}
-main{max-width:1120px;margin:28px auto;padding:0 20px 30px}
-.welcome{background:var(--surface);padding:24px;border-radius:14px;margin-bottom:22px;box-shadow:0 3px 14px #16394b0d;border:1px solid var(--line)}
-.welcome-top{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;flex-wrap:wrap}
-.welcome h2{color:var(--navy);margin:0 0 8px;font-size:23px}
-.welcome p{margin:0;line-height:1.55;color:var(--muted)}
-#adminStatus{margin-top:14px;font-size:13px;color:var(--green);font-weight:700}
-.section-heading{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:28px 0 14px}
-.section-heading h2{color:var(--navy);font-size:20px;margin:0}
-.section-heading p{font-size:13px;color:var(--muted);margin:0}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:19px;box-shadow:0 3px 12px #16394b08}
-.stat-label{font-size:13px;color:var(--muted);font-weight:700}
-.stat-value{font-size:30px;line-height:1.2;font-weight:700;color:var(--navy);margin:10px 0 4px}
-.stat-note{font-size:12px;color:#7a8993}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.card{background:#fff;padding:22px;border-radius:13px;border:1px solid var(--line);box-shadow:0 3px 12px #16394b08;border-top:4px solid var(--gold);display:flex;flex-direction:column;align-items:flex-start}
-.card h3{color:var(--navy);margin:0 0 8px;font-size:18px}
-.card p{line-height:1.55;color:var(--muted);margin:0 0 16px;flex:1}
-.card a{display:inline-block;background:var(--green);color:#fff;text-decoration:none;padding:11px 16px;border-radius:7px;font-weight:700;font-size:14px}
-.card a:hover{background:#146c43}
-.actions{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:24px}
-.logout{background:#b9382c;color:#fff;border:0;padding:11px 18px;border-radius:7px;cursor:pointer;font-weight:700}
-.logout:hover{background:#962d24}
-.refresh{background:#eaf1f5;color:var(--navy);border:1px solid #d8e2e8;padding:10px 14px;border-radius:7px;cursor:pointer;font-weight:700}
-.refresh:hover{background:#dfeaf0}
-footer{text-align:center;padding:22px;color:#71808a;font-size:13px}
-@media(max-width:700px){.stats{grid-template-columns:1fr}.grid{grid-template-columns:1fr}main{margin:18px auto;padding:0 14px 24px}header{padding:24px 16px}.welcome{padding:19px}.section-heading{align-items:flex-start;flex-direction:column}}
+:root {
+    --blue: #123b56;
+    --blue-dark: #092b40;
+    --green: #198754;
+    --green-light: #eaf5ee;
+    --gold: #d6a84f;
+    --white: #ffffff;
+    --light: #f5f7f8;
+    --text: #344451;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 85px;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    line-height: 1.7;
+    background: var(--white);
+}
+
+a {
+    text-decoration: none;
+}
+
+header {
+    background: var(--blue-dark);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 3px 12px #0002;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 12px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.brand img {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+    background: white;
+    border-radius: 8px;
+}
+
+.brand h2 {
+    font-size: 21px;
+    line-height: 1.2;
+}
+
+.brand small {
+    color: var(--gold);
+    font-size: 11px;
+}
+
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 17px;
+    align-items: center;
+}
+
+nav a {
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    color: var(--gold);
+}
+
+.menu-button {
+    display: none;
+    background: transparent;
+    color: white;
+    border: 1px solid #ffffff66;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.hero {
+    min-height: 560px;
+    display: flex;
+    align-items: center;
+    background:
+        linear-gradient(90deg, #092b40ed, #123b56bd),
+        url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1800&q=85")
+        center/cover;
+    color: white;
+}
+
+.hero-content {
+    max-width: 1200px;
+    width: 100%;
+    padding: 80px 25px;
+    margin: auto;
+}
+
+.hero-label {
+    display: inline-block;
+    color: var(--gold);
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+.hero h1 {
+    font-size: clamp(36px, 6vw, 62px);
+    max-width: 850px;
+    line-height: 1.15;
+    margin-bottom: 22px;
+}
+
+.hero p {
+    font-size: 18px;
+    max-width: 680px;
+    margin-bottom: 30px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 13px 25px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin: 5px;
+    transition: .2s;
+}
+
+.btn-gold {
+    background: var(--gold);
+    color: var(--blue-dark);
+}
+
+.btn-outline {
+    border: 2px solid white;
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+}
+
+.section {
+    padding: 75px 22px;
+}
+
+.container {
+    max-width: 1150px;
+    margin: auto;
+}
+
+.section-heading {
+    text-align: center;
+    margin-bottom: 42px;
+}
+
+.section-heading span {
+    color: var(--green);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 13px;
+}
+
+.section-heading h2 {
+    color: var(--blue);
+    font-size: 34px;
+    margin: 8px 0;
+}
+
+.section-heading p {
+    max-width: 700px;
+    margin: auto;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 45px;
+    align-items: center;
+}
+
+.about-grid h2 {
+    color: var(--blue);
+    font-size: 30px;
+    margin-bottom: 18px;
+}
+
+.about-panel {
+    background: var(--green-light);
+    padding: 32px;
+    border-left: 5px solid var(--green);
+    border-radius: 8px;
+}
+
+.about-panel h3 {
+    color: var(--blue);
+    margin-bottom: 10px;
+}
+
+.vision-mission {
+    background: var(--blue);
+    color: white;
+}
+
+.vision-mission .section-heading h2 {
+    color: white;
+}
+
+.vm-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+.vm-card {
+    padding: 32px;
+    background: #ffffff12;
+    border: 1px solid #ffffff30;
+    border-radius: 9px;
+}
+
+.vm-card h3 {
+    color: var(--gold);
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.program-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.program-card {
+    padding: 27px;
+    border: 1px solid #e4e9ed;
+    border-radius: 9px;
+    background: white;
+    box-shadow: 0 5px 18px #123b560b;
+    transition: .25s;
+}
+
+.program-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--gold);
+    box-shadow: 0 8px 22px #123b561c;
+}
+
+.program-icon {
+    font-size: 35px;
+    margin-bottom: 12px;
+}
+
+.program-card h3 {
+    color: var(--blue);
+    font-size: 19px;
+    margin-bottom: 12px;
+}
+
+.services {
+    background: var(--light);
+}
+
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.service-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    border-bottom: 4px solid var(--green);
+}
+
+.service-card h3 {
+    color: var(--blue);
+    margin-bottom: 10px;
+}
+
+.notice {
+    margin-top: 30px;
+    background: #fff8e9;
+    border-left: 4px solid var(--gold);
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.pathway {
+    background: var(--blue-dark);
+    color: white;
+}
+
+.pathway .section-heading h2 {
+    color: white;
+}
+
+.pathway-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.step {
+    background: #ffffff12;
+    padding: 22px;
+    border-radius: 8px;
+    border: 1px solid #ffffff25;
+}
+
+.step strong {
+    display: block;
+    color: var(--gold);
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.governance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.person {
+    padding: 22px;
+    background: var(--light);
+    border-radius: 8px;
+    border-top: 4px solid var(--green);
+}
+
+.person h3 {
+    color: var(--blue);
+    font-size: 17px;
+}
+
+.person p {
+    color: var(--green);
+    font-size: 14px;
+}
+
+.person img {
+    width: 100%;
+    max-width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.activity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.activity-card {
+    background: white;
+    border: 1px solid #e4e9ed;
+    border-radius: 9px;
+    overflow: hidden;
+    box-shadow: 0 5px 18px #123b560b;
+}
+
+.activity-card img, .activity-card video, .activity-card iframe {
+    display: block;
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    background: #e9eef1;
+    border: 0;
+}
+
+.activity-card-content { padding: 20px; }
+.activity-card h3 { color: var(--blue); margin-bottom: 8px; }
+.activity-date { color: var(--green); font-size: 13px; margin-bottom: 8px; }
+.activity-placeholder { padding: 45px 20px; text-align: center; color: var(--blue); background: var(--light); font-size: 34px; }
+.dynamic-empty { text-align: center; padding: 25px; background: var(--light); border-radius: 8px; }
+
+.partnership {
+    background: var(--green-light);
+}
+
+.partnership-content {
+    max-width: 850px;
+    margin: auto;
+    text-align: center;
+}
+
+.contact {
+    background: var(--blue);
+    color: white;
+}
+
+.contact .section-heading h2 {
+    color: white;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.contact-card {
+    padding: 25px;
+    background: #ffffff12;
+    border-radius: 8px;
+    border: 1px solid #ffffff30;
+}
+
+.contact-card h3 {
+    color: var(--gold);
+    margin-bottom: 10px;
+}
+
+.contact-card a {
+    color: white;
+    overflow-wrap: anywhere;
+}
+
+footer {
+    background: #071f30;
+    color: #dce5eb;
+    padding: 35px 20px;
+    text-align: center;
+}
+
+footer strong {
+    color: var(--gold);
+}
+
+footer p {
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+@media(max-width: 900px) {
+    nav {
+        display: none;
+        position: absolute;
+        top: 79px;
+        left: 0;
+        width: 100%;
+        padding: 20px;
+        background: var(--blue-dark);
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    nav.open {
+        display: flex;
+    }
+
+    .menu-button {
+        display: block;
+    }
+
+    .program-grid,
+    .service-grid,
+    .activity-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 650px) {
+    .about-grid,
+    .vm-grid,
+    .program-grid,
+    .service-grid,
+    .activity-grid,
+    .pathway-steps,
+    .governance-grid,
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        min-height: 500px;
+    }
+
+    .hero h1 {
+        font-size: 39px;
+    }
+
+    .section {
+        padding: 55px 18px;
+    }
+
+    .section-heading h2 {
+        font-size: 28px;
+    }
+
+    .brand h2 {
+        font-size: 17px;
+    }
+
+    .brand img {
+        width: 45px;
+        height: 45px;
+    }
+}
+
+
+
+/* ==========================================================
+   IFEI-SL HOMEPAGE DESIGN UPDATE
+   CSS-only presentation update. Existing content, IDs,
+   Supabase queries and public management behaviour remain intact.
+   ========================================================== */
+
+:root {
+    --blue: #123b56;
+    --blue-dark: #08283c;
+    --green: #198754;
+    --green-light: #eaf5ee;
+    --gold: #d6a84f;
+    --light: #f4f7f9;
+    --text: #344451;
+    --muted: #647785;
+    --line: #e3eaee;
+    --card-shadow: 0 14px 34px rgba(8, 40, 60, .09);
+}
+
+body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    color: var(--text);
+    line-height: 1.75;
+    background: #fff;
+}
+
+header {
+    background: rgba(8, 40, 60, .98);
+    border-bottom: 3px solid var(--gold);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, .15);
+}
+
+.nav-container {
+    max-width: 1380px;
+    min-height: 86px;
+    padding: 12px 30px;
+}
+
+.brand { gap: 14px; }
+.brand img {
+    width: 60px;
+    height: 60px;
+    padding: 4px;
+    border: 1px solid rgba(214, 168, 79, .65);
+    border-radius: 13px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
+}
+.brand h2 {
+    font-size: 23px;
+    letter-spacing: .5px;
+}
+.brand small {
+    display: block;
+    max-width: 250px;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #f0cf8a;
+}
+nav { gap: 5px; }
+nav a {
+    padding: 9px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    transition: background .2s ease, color .2s ease;
+}
+nav a:hover, nav a:focus-visible {
+    color: #f3d28e;
+    background: rgba(255,255,255,.1);
+    outline: none;
+}
+.menu-button {
+    border-radius: 8px;
+    padding: 8px 13px;
+}
+
+.hero {
+    min-height: 640px;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+        linear-gradient(105deg, rgba(5, 30, 46, .96) 0%, rgba(9, 43, 64, .82) 48%, rgba(9, 43, 64, .35) 100%),
+        url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=2000&q=90")
+        center 43% / cover no-repeat;
+}
+.hero::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    width: 440px;
+    height: 440px;
+    right: -150px;
+    bottom: -230px;
+    border: 1px solid rgba(214,168,79,.42);
+    border-radius: 50%;
+    box-shadow: 0 0 0 34px rgba(214,168,79,.07), 0 0 0 76px rgba(214,168,79,.045);
+}
+.hero-content {
+    max-width: 1380px;
+    padding: 112px 34px 120px;
+}
+.hero-label {
+    padding: 9px 15px;
+    border: 1px solid rgba(214,168,79,.7);
+    border-radius: 999px;
+    background: rgba(4, 29, 44, .48);
+    font-size: 11px;
+    letter-spacing: 1.55px;
+}
+.hero h1 {
+    max-width: 800px;
+    font-size: clamp(42px, 5.6vw, 72px);
+    line-height: 1.08;
+    letter-spacing: -1.6px;
+    text-wrap: balance;
+    text-shadow: 0 4px 22px rgba(0,0,0,.3);
+}
+.hero p {
+    max-width: 700px;
+    color: rgba(255,255,255,.93);
+    font-size: clamp(16px, 1.6vw, 19px);
+    line-height: 1.85;
+}
+.btn {
+    min-height: 49px;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.16);
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0,0,0,.22);
+}
+.btn-gold { background: var(--gold); color: #142f3e; }
+.btn-gold:hover { background: #e7bf6d; }
+.btn-outline {
+    border: 1px solid rgba(255,255,255,.9);
+    background: rgba(255,255,255,.07);
+}
+.btn-outline:hover { background: rgba(255,255,255,.17); }
+
+.section { padding: 92px 28px; }
+.container { max-width: 1240px; }
+.section-heading { margin-bottom: 50px; }
+.section-heading span {
+    display: inline-block;
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.2px;
+}
+.section-heading h2 {
+    margin: 10px 0 13px;
+    font-size: clamp(30px, 3vw, 40px);
+    line-height: 1.2;
+    letter-spacing: -.7px;
+}
+.section-heading h2::after {
+    content: "";
+    display: block;
+    width: 54px;
+    height: 4px;
+    margin: 17px auto 0;
+    border-radius: 4px;
+    background: var(--gold);
+}
+.section-heading p {
+    max-width: 760px;
+    color: var(--muted);
+}
+
+#about { background: linear-gradient(180deg, #f5f8fa 0%, #fff 100%); }
+.about-grid { gap: 64px; }
+.about-grid h2 {
+    margin: 12px 0 18px;
+    font-size: clamp(28px, 3vw, 37px);
+    line-height: 1.22;
+    letter-spacing: -.7px;
+}
+#aboutText { color: #50616c; }
+.about-panel {
+    padding: 40px;
+    background: #fff;
+    border: 1px solid #dce9e1;
+    border-left: 5px solid var(--green);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+}
+.about-panel h3 { font-size: 24px; margin-bottom: 13px; }
+
+.vision-mission {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(130deg, #123b56 0%, #092b40 72%, #071f30 100%);
+}
+.vision-mission::before {
+    content: "";
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    top: -190px;
+    right: -100px;
+    border: 1px solid rgba(214,168,79,.28);
+    border-radius: 50%;
+    box-shadow: 0 0 0 38px rgba(214,168,79,.045), 0 0 0 82px rgba(214,168,79,.025);
+}
+.vision-mission .section-heading,
+.vm-grid { position: relative; }
+.vision-mission .section-heading p { color: rgba(255,255,255,.78); }
+.vision-mission .section-heading span { color: #f0cb7d; }
+.vm-grid { gap: 26px; }
+.vm-card {
+    padding: 40px;
+    background: rgba(255,255,255,.075);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(0,0,0,.12);
+}
+.vm-card h3 { font-size: 26px; }
+.vm-card p { color: rgba(255,255,255,.88); }
+
+#programmes { background: #fff; }
+.program-grid { gap: 24px; }
+.program-card {
+    min-height: 245px;
+    padding: 31px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    box-shadow: 0 7px 24px rgba(8,40,60,.055);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.program-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--green);
+}
+.program-card:hover {
+    transform: translateY(-7px);
+    border-color: rgba(214,168,79,.8);
+    box-shadow: var(--card-shadow);
+}
+.program-icon {
+    display: inline-flex;
+    width: 58px;
+    height: 58px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    border-radius: 16px;
+    background: var(--green-light);
+    font-size: 30px;
+}
+.program-card h3 { font-size: 19px; line-height: 1.4; }
+.program-card p, .service-card p { color: var(--muted); font-size: 14px; }
+.program-image {
+    display: block;
+    width: 100%;
+    height: 190px;
+    margin: 0 0 20px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #edf2f5;
+}
+.program-additional-text {
+    margin-top: 13px;
+    padding-top: 13px;
+    border-top: 1px solid var(--line);
+    color: #405766 !important;
+    white-space: pre-line;
+}
+
+.services { background: var(--light); }
+.service-grid { gap: 22px; }
+.service-card {
+    height: 100%;
+    padding: 30px;
+    border: 1px solid #e4ebef;
+    border-bottom: 4px solid var(--green);
+    border-radius: 13px;
+    box-shadow: 0 6px 20px rgba(8,40,60,.045);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow);
+}
+.service-card h3 { color: var(--blue); font-size: 19px; }
+.notice {
+    padding: 23px 26px;
+    border: 1px solid #f0dfba;
+    border-left: 5px solid var(--gold);
+    border-radius: 11px;
+    background: #fff9ec;
+    color: #5b503a;
+}
+
+.pathway {
+    background: linear-gradient(130deg, #08283c, #164c68);
+}
+.pathway .section-heading span { color: #f0cb7d; }
+.pathway .section-heading p { color: rgba(255,255,255,.8); }
+.pathway-steps { gap: 19px; }
+.step {
+    min-height: 138px;
+    padding: 26px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 13px;
+    background: rgba(255,255,255,.075);
+    color: rgba(255,255,255,.92);
+    transition: transform .2s ease, background .2s ease;
+}
+.step:hover { transform: translateY(-4px); background: rgba(255,255,255,.13); }
+.step strong { font-size: 28px; }
+
+#activities { background: #fff; }
+.activity-grid { gap: 25px; }
+.activity-card {
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    box-shadow: 0 7px 24px rgba(8,40,60,.06);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.activity-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow); }
+.activity-card img, .activity-card video, .activity-card iframe {
+    height: 240px;
+    max-height: 240px;
+    object-fit: cover;
+}
+.activity-card-content { padding: 24px; }
+.activity-card h3 { font-size: 19px; line-height: 1.4; }
+.activity-date { color: var(--green); font-weight: 700; }
+.activity-placeholder {
+    min-height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eaf5ee, #edf2f5);
+    color: var(--blue);
+    font-size: 40px;
+}
+.dynamic-empty {
+    padding: 32px;
+    border: 1px dashed #cbd7de;
+    color: var(--muted);
+}
+.activities-note { max-width: 850px; margin: 22px auto 0; text-align: center; color: var(--muted); font-size: 14px; }
+
+#governance { background: #f5f8fa; }
+.governance-grid { gap: 20px; }
+.person {
+    height: 100%;
+    padding: 27px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--green);
+    border-radius: 13px;
+    box-shadow: 0 6px 20px rgba(8,40,60,.045);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.person:hover { transform: translateY(-4px); box-shadow: var(--card-shadow); }
+.person img { max-width: 170px; height: 170px; border-radius: 13px; }
+.person h3 { font-size: 17px; }
+.person p { line-height: 1.5; }
+
+.partnership {
+    background: linear-gradient(180deg, #eaf5ee, #f5faf7);
+}
+.partnership-content { max-width: 920px; }
+.partnership-content p { color: #4e6258; }
+
+.contact {
+    background: linear-gradient(135deg, #123b56, #08283c);
+}
+.contact .section-heading span { color: #f0cb7d; }
+.contact .section-heading p { color: rgba(255,255,255,.82); }
+.contact-grid { gap: 22px; }
+.contact-card {
+    height: 100%;
+    padding: 30px;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 13px;
+    background: rgba(255,255,255,.075);
+    transition: transform .2s ease, background .2s ease;
+}
+.contact-card:hover { transform: translateY(-4px); background: rgba(255,255,255,.12); }
+.contact-card h3 { font-size: 19px; }
+.contact-card p, .contact-card a { color: rgba(255,255,255,.92); }
+
+footer {
+    padding: 43px 20px;
+    border-top: 3px solid var(--gold);
+    background: #061c2a;
+}
+footer p { line-height: 1.7; }
+
+a:focus-visible, button:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+}
+
+@media (max-width: 1050px) {
+    .nav-container { padding-left: 20px; padding-right: 20px; }
+    nav { gap: 2px; }
+    nav a { padding: 8px 7px; font-size: 11px; }
+}
+@media (max-width: 900px) {
+    .nav-container { min-height: 76px; }
+    nav {
+        top: 76px;
+        padding: 18px 22px 22px;
+        gap: 5px;
+        border-top: 1px solid rgba(255,255,255,.12);
+        box-shadow: 0 12px 18px rgba(0,0,0,.15);
+    }
+    nav a { width: 100%; padding: 11px 12px; font-size: 14px; }
+    .hero { min-height: 570px; }
+}
+@media (max-width: 650px) {
+    .nav-container { padding: 10px 16px; }
+    .brand { gap: 10px; }
+    .brand img { width: 46px; height: 46px; }
+    .brand h2 { font-size: 18px; }
+    .brand small { max-width: 205px; font-size: 9px; }
+    .hero { min-height: 550px; background-position: 58% center; }
+    .hero-content { padding: 78px 21px 84px; }
+    .hero-label { max-width: 100%; font-size: 9px; line-height: 1.6; letter-spacing: 1px; border-radius: 8px; }
+    .hero h1 { font-size: clamp(37px, 10vw, 49px); letter-spacing: -.8px; }
+    .hero p { font-size: 16px; }
+    .btn { display: block; width: fit-content; max-width: 100%; margin: 9px 0; text-align: center; }
+    .section { padding: 66px 19px; }
+    .section-heading { margin-bottom: 35px; }
+    .section-heading h2 { font-size: 29px; }
+    .about-panel, .vm-card { padding: 27px; }
+    .program-card { min-height: 0; padding: 27px; }
+    .service-card { padding: 25px; }
+    .activity-card img, .activity-card video, .activity-card iframe,
+    .activity-placeholder { height: 215px; min-height: 215px; max-height: 215px; }
+    .contact-card { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+
+
+/* Team portraits: show the complete original photo without cropping. */
+#governanceGrid .person img {
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+    max-height: 280px;
+    object-fit: contain;
+    object-position: center;
+    margin: 0 auto 16px;
+    padding: 5px;
+    background: #eef2f4;
+    border: 1px solid #e0e7eb;
+    border-radius: 12px;
+    cursor: zoom-in;
+}
+#teamPhotoViewer {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(3, 17, 27, .94);
+}
+#teamPhotoViewer.open { display: flex; }
+#teamPhotoViewer .viewer-panel {
+    width: min(100%, 1100px);
+    height: min(92vh, 900px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+#teamPhotoViewer .viewer-toolbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+#teamPhotoViewer .viewer-toolbar button {
+    min-width: 42px;
+    padding: 9px 14px;
+    border: 1px solid #ffffff66;
+    border-radius: 7px;
+    background: #ffffff18;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+}
+#teamPhotoViewer .viewer-toolbar button:hover { background: #ffffff30; }
+#teamPhotoViewer #teamPhotoZoomLevel { color: #fff; min-width: 55px; text-align: center; }
+#teamPhotoViewer #teamPhotoClose { margin-left: 12px; }
+#teamPhotoViewer .viewer-image-area {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+#teamPhotoViewer #teamPhotoLarge {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transform-origin: center center;
+    transition: transform .12s ease;
+}
+#teamPhotoViewer #teamPhotoCaption { color: #fff; text-align: center; }
+@media(max-width: 600px) {
+    #teamPhotoViewer { padding: 12px; }
+    #teamPhotoViewer .viewer-panel { height: 94vh; }
+    #teamPhotoViewer .viewer-toolbar { gap: 6px; }
+    #teamPhotoViewer .viewer-toolbar button { padding: 8px 11px; }
+}
+
 </style>
+  
+<link rel="icon" type="image/png" href="logo.png">
+  
 </head>
+  
 
 <body>
 
 <header>
-    <div class="header-inner">
-        <div class="brand">
-            <h1>IFEI-SL Administration</h1>
-            <p>Inclusive Financial Empowerment Initiative – Sierra Leone</p>
-        </div>
-        <div class="header-tag">ADMINISTRATION PORTAL</div>
+    <div class="nav-container">
+        <a href="#home" class="brand">
+            <img src="logo.png" alt="IFEI-SL Logo">
+            <div>
+                <h2>IFEI-SL</h2>
+                <small>Inclusive Financial Empowerment Initiative</small>
+            </div>
+        </a>
+
+        <button class="menu-button" onclick="toggleMenu()" aria-label="Toggle navigation">☰</button>
+
+        <nav id="mainNav">
+            <a href="#home" onclick="closeMenu()">Home</a>
+            <a href="#about" onclick="closeMenu()">About</a>
+            <a href="#vision" onclick="closeMenu()">Vision & Mission</a>
+            <a href="#programmes" onclick="closeMenu()">Programmes</a>
+            <a href="#activities" onclick="closeMenu()">Activities</a>
+            <a href="#services" onclick="closeMenu()">Services</a>
+            <a href="#governance" onclick="closeMenu()">Governance</a>
+            <a href="#contact" onclick="closeMenu()">Contact</a>
+        </nav>
     </div>
 </header>
 
 <main>
-    <section class="welcome">
-        <div class="welcome-top">
-            <div>
-                <h2>Administrator Dashboard</h2>
-                <p>Welcome. Use the sections below to manage the IFEI-SL website.</p>
+
+<section class="hero" id="home">
+    <div class="hero-content">
+        <span class="hero-label">FINANCIAL INCLUSION • ENTREPRENEURSHIP • DISABILITY INCLUSION</span>
+        <h1>Building Financially Empowered Communities</h1>
+        <p>
+            Creating inclusive financial and economic opportunities for
+            persons with disabilities, women, young entrepreneurs and
+            underserved communities across Sierra Leone.
+        </p>
+        <a href="#about" class="btn btn-gold">Discover IFEI-SL</a>
+        <a href="#programmes" class="btn btn-outline">Explore Our Programmes</a>
+    </div>
+</section>
+
+<section class="section" id="about">
+    <div class="container about-grid">
+        <div>
+            <span style="color:var(--green);font-weight:bold;">WHO WE ARE</span>
+            <h2>Inclusive Financial Empowerment Initiative – Sierra Leone</h2>
+            <p id="aboutText" style="white-space:pre-line;">
+                Inclusive Financial Empowerment Initiative (IFEI) is a
+                Sierra Leone-based initiative focused on inclusive
+                financial empowerment, entrepreneurship and sustainable
+                livelihoods.
+
+                IFEI gives particular attention to persons with
+                disabilities, women, youth, low-income households,
+                vulnerable communities and small-scale entrepreneurs.
+
+                Our approach goes beyond short-term credit by combining
+                financial literacy, savings, entrepreneurship, productive
+                assets, mentorship, market linkages and follow-up support.
+            </p>
+        </div>
+
+        <div class="about-panel">
+            <h3>Our Commitment</h3>
+            <p>
+                We are committed to reducing barriers to economic
+                participation and supporting people to develop the
+                knowledge, resources and opportunities needed for
+                sustainable livelihoods.
+            </p>
+            <br>
+            <strong style="color:var(--green);">
+                From economic exclusion to opportunity, dignity and
+                sustainable livelihoods.
+            </strong>
+        </div>
+    </div>
+</section>
+
+<section class="section" id="impactSection" hidden>
+    <div class="container">
+        <div class="section-heading">
+            <span>OUR COMMITMENT</span>
+            <h2>Our Impact</h2>
+        </div>
+        <p id="impactText" style="white-space:pre-line;max-width:850px;margin:auto;text-align:center;"></p>
+    </div>
+</section>
+
+<section class="section vision-mission" id="vision">
+    <div class="container">
+        <div class="section-heading">
+            <span>OUR DIRECTION</span>
+            <h2>Vision & Mission</h2>
+        </div>
+
+        <div class="vm-grid">
+            <div class="vm-card">
+                <h3>Our Vision</h3>
+                <p id="visionText">
+                    A Sierra Leone where underserved people, particularly
+                    persons with disabilities, women and young
+                    entrepreneurs, have fair access to financial
+                    knowledge, economic opportunities, productive
+                    resources and sustainable livelihoods.
+                </p>
             </div>
-            <button class="refresh" id="refreshButton" type="button">Refresh summaries</button>
-        </div>
-        <p id="adminStatus">Checking administrator access...</p>
-    </section>
 
-    <div class="section-heading">
-        <h2>Website Overview</h2>
-        <p>Current records available to this dashboard</p>
+            <div class="vm-card">
+                <h3>Our Mission</h3>
+                <p id="missionText">
+                    To expand inclusive financial and economic
+                    opportunities by combining financial literacy,
+                    savings, entrepreneurship, SME development, skills,
+                    appropriate financing, productive assets, mentorship
+                    and market connections, while working with communities
+                    and partners to reduce barriers to participation.
+                </p>
+            </div>
+        </div>
     </div>
-    <section class="stats" aria-label="Website summaries">
-        <div class="stat">
-            <div class="stat-label">Active Programmes</div>
-            <div class="stat-value" id="programmeCount">—</div>
-            <div class="stat-note">From the IFEI-SL programmes database</div>
-        </div>
-        <div class="stat">
-            <div class="stat-label">Activities</div>
-            <div class="stat-value" id="activityCount">—</div>
-            <div class="stat-note">From the IFEI-SL activities database</div>
-        </div>
-        <div class="stat">
-            <div class="stat-label">Active Team Members</div>
-            <div class="stat-value" id="teamCount">—</div>
-            <div class="stat-note">From the IFEI-SL team database</div>
-        </div>
-    </section>
+</section>
 
-    <div class="section-heading">
-        <h2>Management Sections</h2>
-        <p>Choose an area to manage</p>
-    </div>
-    <section class="grid">
-        <div class="card">
-            <h3>Website Content</h3>
-            <p>Manage About Us, Vision, Mission and Impact information.</p>
-            <a href="content-management.html">Manage Content</a>
+<section class="section" id="programmes">
+    <div class="container">
+        <div class="section-heading">
+            <span>WHAT WE DO</span>
+            <h2>Our Seven Core Programme Areas</h2>
+            <p>
+                Our programmes are designed to strengthen financial
+                knowledge, entrepreneurship and inclusive economic
+                participation.
+            </p>
         </div>
-        <div class="card">
-            <h3>Programmes</h3>
-            <p>Add, edit, activate or deactivate organisation programmes, including programme images and additional information.</p>
-            <a href="programmes-management.html">Manage Programmes</a>
-        </div>
-        <div class="card">
-            <h3>Activities</h3>
-            <p>Publish and manage photos, videos and organisation updates.</p>
-            <a href="activities-management.html">Manage Activities</a>
-        </div>
-        <div class="card">
-            <h3>Team Members</h3>
-            <p>Add, edit, activate or deactivate team members and manage their profiles.</p>
-            <a href="team-management.html">Manage Team</a>
-        </div>
-    </section>
 
-    <div class="actions">
-        <span class="stat-note">IFEI-SL • Administration</span>
-        <button class="logout" id="logoutButton" type="button">Log Out</button>
+        <div class="program-grid" id="programGrid">
+
+            <div class="program-card">
+                <div class="program-icon">💰</div>
+                <h3>Financial Inclusion & Literacy</h3>
+                <p>
+                    Savings, budgeting, responsible borrowing, consumer
+                    awareness and appropriate access to financial services.
+                </p>
+            </div>
+
+            <div class="program-card">
+                <div class="program-icon">🏦</div>
+                <h3>Savings & Appropriate Finance</h3>
+                <p>
+                    Developing realistic savings habits and appropriate
+                    financing pathways for viable activities.
+                </p>
+            </div>
+
+            <div class="program-card">
+                <div class="program-icon">📈</div>
+                <h3>SME & Entrepreneurship Development</h3>
+                <p>
+                    Business planning, bookkeeping, pricing, cash-flow,
+                    marketing, customer management and coaching.
+                </p>
+            </div>
+
+            <div class="program-card">
+                <div class="program-icon">🛠️</div>
+                <h3>Livelihoods & Productive Assets</h3>
+                <p>
+                    Skills, starter support, productive tools, assistive
+                    devices and other resources that strengthen
+                    income-generating activities.
+                </p>
+            </div>
+
+            <div class="program-card">
+                <div class="program-icon">♿</div>
+                <h3>Disability-Inclusive Economic Empowerment</h3>
+                <p>
+                    Reducing physical, informational and social barriers
+                    to economic participation.
+                </p>
+            </div>
+
+            <div class="program-card">
+                <div class="program-icon">🌐</div>
+                <h3>Digital & Market Linkages</h3>
+                <p>
+                    Digital financial literacy, digital tools for business,
+                    communication, market connections and partnerships.
+                </p>
+            </div>
+
+        </div>
     </div>
+</section>
+
+<section class="section services" id="services">
+    <div class="container">
+        <div class="section-heading">
+            <span>FINANCIAL EMPOWERMENT</span>
+            <h2>Financial Products & Support Services</h2>
+            <p>
+                Our financial empowerment approach combines financial
+                education, savings, appropriate financing pathways and
+                business support.
+            </p>
+        </div>
+
+        <div class="service-grid">
+
+            <div class="service-card">
+                <h3>Financial Literacy</h3>
+                <p>
+                    Budgeting, money management, responsible borrowing
+                    and financial decision-making.
+                </p>
+            </div>
+
+            <div class="service-card">
+                <h3>Savings Support</h3>
+                <p>
+                    Encouraging realistic savings habits and improved
+                    financial planning.
+                </p>
+            </div>
+
+            <div class="service-card">
+                <h3>Appropriate Financing Pathways</h3>
+                <p>
+                    Exploring suitable financing options for viable
+                    income-generating activities, subject to assessment
+                    and available resources.
+                </p>
+            </div>
+
+            <div class="service-card">
+                <h3>Business Development</h3>
+                <p>
+                    Business planning, bookkeeping, pricing, marketing
+                    and enterprise coaching.
+                </p>
+            </div>
+
+            <div class="service-card">
+                <h3>Productive Assets</h3>
+                <p>
+                    Support pathways involving productive tools,
+                    equipment and assistive devices.
+                </p>
+            </div>
+
+            <div class="service-card">
+                <h3>Mentorship & Market Connections</h3>
+                <p>
+                    Mentorship, business guidance, communication
+                    and market linkages.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="notice">
+            <strong>Important:</strong>
+            Specific financing, grants, loans and other forms of support
+            are subject to programme development, beneficiary assessment,
+            eligibility, partnerships and available resources. This
+            website does not promise automatic financing.
+        </div>
+    </div>
+</section>
+
+<section class="section pathway">
+    <div class="container">
+        <div class="section-heading">
+            <span>OUR APPROACH</span>
+            <h2>The Beneficiary Pathway</h2>
+            <p>
+                Our intended model connects people to knowledge,
+                mentorship, productive resources and opportunities.
+            </p>
+        </div>
+
+        <div class="pathway-steps">
+            <div class="step">
+                <strong>01</strong>
+                Identify and assess beneficiaries.
+            </div>
+            <div class="step">
+                <strong>02</strong>
+                Financial literacy and SME training.
+            </div>
+            <div class="step">
+                <strong>03</strong>
+                Simple business planning.
+            </div>
+            <div class="step">
+                <strong>04</strong>
+                Mentorship and coaching.
+            </div>
+            <div class="step">
+                <strong>05</strong>
+                Productive assets or appropriate financing pathways.
+            </div>
+            <div class="step">
+                <strong>06</strong>
+                Market and partner linkages, monitoring and follow-up.
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section services" id="activities">
+    <div class="container">
+        <div class="section-heading">
+            <span>OUR WORK IN ACTION</span>
+            <h2>Activities & Updates</h2>
+            <p>Photos, videos and updates from IFEI-SL activities and initiatives.</p>
+        </div>
+        <div class="activity-grid" id="activitiesGrid">
+            <article class="activity-card">
+                <div class="activity-placeholder" aria-hidden="true">🤝</div>
+                <div class="activity-card-content">
+                    <p class="activity-date">PROGRAMME FOCUS</p>
+                    <h3>Community Engagement</h3>
+                    <p>Listening to communities, identifying barriers to economic participation and understanding the priorities of underserved people.</p>
+                </div>
+            </article>
+
+            <article class="activity-card">
+                <div class="activity-placeholder" aria-hidden="true">📚</div>
+                <div class="activity-card-content">
+                    <p class="activity-date">PROGRAMME FOCUS</p>
+                    <h3>Financial Literacy</h3>
+                    <p>Promoting practical knowledge about budgeting, savings, responsible borrowing and informed financial decisions.</p>
+                </div>
+            </article>
+
+            <article class="activity-card">
+                <div class="activity-placeholder" aria-hidden="true">🌱</div>
+                <div class="activity-card-content">
+                    <p class="activity-date">PROGRAMME FOCUS</p>
+                    <h3>Entrepreneurship Support</h3>
+                    <p>Encouraging stronger small businesses through business planning, coaching, productive resources and market connections.</p>
+                </div>
+            </article>
+        </div>
+        <p class="activities-note">These cards describe IFEI-SL's programme focus areas. Photos, videos and reports of completed activities will be added when they are available.</p>
+    </div>
+</section>
+
+<section class="section" id="governance">
+    <div class="container">
+        <div class="section-heading">
+            <span>LEADERSHIP</span>
+            <h2>Governance & Management</h2>
+            <p>
+                IFEI's leadership and management structure supports
+                transparency, accountability and responsible programme
+                delivery.
+            </p>
+        </div>
+
+        <div class="governance-grid" id="governanceGrid">
+
+            <div class="person">
+                <h3>Alhaji Alpha Kamara</h3>
+                <p>Executive Director / Board Chairperson</p>
+            </div>
+
+            <div class="person">
+                <h3>Musa Yakub Sesay</h3>
+                <p>Programme Manager</p>
+            </div>
+
+            <div class="person">
+                <h3>Fatmata Koroma</h3>
+                <p>Head of Finance</p>
+            </div>
+
+            <div class="person">
+                <h3>Fatmata Boima Kamara</h3>
+                <p>Board Member</p>
+            </div>
+
+            <div class="person">
+                <h3>Kadiatu Conteh</h3>
+                <p>Board Member</p>
+            </div>
+
+            <div class="person">
+                <h3>Osman Kamara</h3>
+                <p>Board Member</p>
+            </div>
+
+            <div class="person">
+                <h3>Saidu Abdulai Sesay</h3>
+                <p>Secretary to the Board</p>
+            </div>
+
+        </div>
+
+        <div class="notice">
+            <strong>Our operating principles:</strong>
+            Transparency, accountability, non-discrimination,
+            accessibility, client protection, responsible lending,
+            confidentiality and community participation.
+        </div>
+    </div>
+</section>
+
+<section class="section partnership">
+    <div class="container partnership-content">
+        <div class="section-heading">
+            <span>WORKING TOGETHER</span>
+            <h2>Partnerships & Collaboration</h2>
+        </div>
+
+        <p>
+            IFEI is building relationships with complementary
+            organisations and stakeholders to advance financial
+            inclusion, economic empowerment, entrepreneurship,
+            disability inclusion, livelihoods, skills development
+            and digital financial literacy.
+        </p>
+
+        <br>
+
+        <p>
+            A key partnership process is the Memorandum of Understanding
+            with the African Youth with Disabilities Network – Sierra
+            Leone (AYwDN-SL).
+        </p>
+
+        <br>
+
+        <a href="#contact" class="btn btn-gold">Partner With IFEI</a>
+    </div>
+</section>
+
+<section class="section contact" id="contact">
+    <div class="container">
+        <div class="section-heading">
+            <span>GET IN TOUCH</span>
+            <h2>Contact IFEI-SL</h2>
+            <p>
+                Connect with us to learn more about our work,
+                partnerships and inclusive economic empowerment.
+            </p>
+        </div>
+
+        <div class="contact-grid">
+
+            <div class="contact-card">
+                <h3>📍 Office Address</h3>
+                <p>
+                    439A Main Bai Bureh Road,<br>
+                    Allen Town Market,<br>
+                    Freetown, Sierra Leone.
+                </p>
+            </div>
+
+            <div class="contact-card">
+                <h3>✉ Email Address</h3>
+                <p>
+                    <a href="mailto:ifeisierraleone@gmail.com">
+                        ifeisierraleone@gmail.com
+                    </a>
+                </p>
+            </div>
+
+            <div class="contact-card">
+                <h3>☎ Telephone</h3>
+                <p>
+                    <a href="tel:+23276743447">+232 76 743 447</a><br>
+                    <a href="tel:+23275675449">+232 75 675 449</a><br>
+                    <a href="tel:+23276724566">+232 76 724 566</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
 </main>
 
 <footer>
-    IFEI-SL Administration System
+    <p><strong>IFEI-SL</strong></p>
+    <p>Inclusive Financial Empowerment Initiative – Sierra Leone</p>
+    <p>
+        Financial Inclusion • Entrepreneurship • Disability Inclusion
+        • Sustainable Livelihoods
+    </p>
+    <br>
+    <p>
+        From economic exclusion to opportunity, dignity and
+        sustainable livelihoods.
+    </p>
+    <br>
+    <p>© <span id="year"></span> IFEI-SL. All Rights Reserved.</p>
 </footer>
 
 <script>
-const SUPABASE_URL = "https://nmpvnkaqwxguawtfihbn.supabase.co";
-const SUPABASE_KEY = "sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
-const ADMIN_ID = "c262096c-0665-4871-82e9-c7a1b7f2c1ce";
-
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-async function checkAdmin() {
-    const status = document.getElementById("adminStatus");
-    const { data: { session }, error } = await db.auth.getSession();
-
-    if (error || !session || session.user.id !== ADMIN_ID) {
-        alert("Please log in using the authorised IFEI-SL administrator account.");
-        window.location.href = "admin.html";
-        return false;
-    }
-
-    status.textContent = "Administrator access verified.";
-    await loadDashboardSummaries();
-    return true;
+function toggleMenu() {
+    document.getElementById("mainNav").classList.toggle("open");
 }
 
-async function loadDashboardSummaries() {
-    const programmeCount = document.getElementById("programmeCount");
-    const activityCount = document.getElementById("activityCount");
-    const teamCount = document.getElementById("teamCount");
-    const status = document.getElementById("adminStatus");
+function closeMenu() {
+    document.getElementById("mainNav").classList.remove("open");
+}
 
-    programmeCount.textContent = "…";
-    activityCount.textContent = "…";
-    teamCount.textContent = "…";
+document.getElementById("year").textContent = new Date().getFullYear();
 
+/* Public website connection: reads only published/active information. */
+const IFEI_SUPABASE_URL = "https://nmpvnkaqwxguawtfihbn.supabase.co";
+const IFEI_SUPABASE_KEY = "sb_publishable_o4d13162GL5Sp-ntv73YJA_PWI9IPE5";
+const ifeiDb = window.supabase.createClient(IFEI_SUPABASE_URL, IFEI_SUPABASE_KEY);
+
+function contentText(value) {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "object" && value.text !== undefined) return String(value.text || "");
+    return String(value);
+}
+
+function safeWebUrl(value) {
+    if (!value) return "";
     try {
-        // Read-only counts: these queries do not add, edit or delete records.
-        const [programmesResult, activitiesResult, teamResult] = await Promise.all([
-            db.from("ifei_programmes")
-                .select("id", { count: "exact", head: true })
-                .eq("is_active", true),
-
-            db.from("ifei_activities")
-                .select("id", { count: "exact", head: true }),
-
-            db.from("ifei_team_members")
-                .select("id", { count: "exact", head: true })
-                .eq("is_active", true)
-        ]);
-
-        programmeCount.textContent = programmesResult.error
-            ? "Error"
-            : String(programmesResult.count ?? 0);
-
-        activityCount.textContent = activitiesResult.error
-            ? "Error"
-            : String(activitiesResult.count ?? 0);
-
-        teamCount.textContent = teamResult.error
-            ? "Error"
-            : String(teamResult.count ?? 0);
-
-        const problems = [];
-        if (programmesResult.error) {
-            console.error("Programmes count error:", programmesResult.error);
-            problems.push("Programmes: " + programmesResult.error.message);
-        }
-        if (activitiesResult.error) {
-            console.error("Activities count error:", activitiesResult.error);
-            problems.push("Activities: " + activitiesResult.error.message);
-        }
-        if (teamResult.error) {
-            console.error("Team count error:", teamResult.error);
-            problems.push("Team: " + teamResult.error.message);
-        }
-
-        status.textContent = problems.length
-            ? "Administrator access verified. Database issue: " + problems.join(" | ")
-            : "Administrator access verified. Database summaries loaded.";
-    } catch (error) {
-        console.error("Dashboard summary error:", error);
-        programmeCount.textContent = "Error";
-        activityCount.textContent = "Error";
-        teamCount.textContent = "Error";
-        status.textContent = "Administrator access verified, but the dashboard could not load summaries: " +
-            (error && error.message ? error.message : String(error));
+        const url = new URL(value, window.location.href);
+        return (url.protocol === "https:" || url.protocol === "http:") ? url.href : "";
+    } catch {
+        return "";
     }
 }
 
-document.getElementById("refreshButton").addEventListener("click", loadDashboardSummaries);
-
-document.getElementById("logoutButton").addEventListener("click", async () => {
-    const { error } = await db.auth.signOut();
+async function loadSiteContent() {
+    const { data, error } = await ifeiDb
+        .from("ifei_site_content")
+        .select("content_key, content_value")
+        .in("content_key", ["about_us", "vision", "mission", "impact"]);
 
     if (error) {
-        alert("Could not log out: " + error.message);
+        console.warn("IFEI website content could not be loaded:", error.message);
         return;
     }
 
-    window.location.href = "admin.html";
-});
+    const values = {};
+    (data || []).forEach(item => {
+        values[item.content_key] = contentText(item.content_value);
+    });
 
-checkAdmin();
+    if (values.about_us) document.getElementById("aboutText").textContent = values.about_us;
+    if (values.vision) document.getElementById("visionText").textContent = values.vision;
+    if (values.mission) document.getElementById("missionText").textContent = values.mission;
+
+    if (values.impact) {
+        document.getElementById("impactText").textContent = values.impact;
+        document.getElementById("impactSection").hidden = false;
+    }
+}
+
+function programmeIcon(programme) {
+    const text = ((programme.slug || "") + " " + (programme.title || "")).toLowerCase();
+    if (text.includes("financial inclusion") || text.includes("literacy")) return "💰";
+    if (text.includes("saving") || text.includes("finance")) return "🏦";
+    if (text.includes("entrepreneur") || text.includes("sme")) return "📈";
+    if (text.includes("livelihood") || text.includes("asset")) return "🛠️";
+    if (text.includes("disability")) return "♿";
+    if (text.includes("digital") || text.includes("market")) return "🌐";
+    return "💼";
+}
+
+async function loadProgrammes() {
+    const { data, error } = await ifeiDb
+        .from("ifei_programmes")
+        .select("slug, title, description, image_url, additional_text, display_order, is_active")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+    if (error) {
+        console.warn("IFEI programmes could not be loaded; showing the built-in programme list:", error.message);
+        return;
+    }
+
+    if (!data || data.length === 0) return;
+
+    const grid = document.getElementById("programGrid");
+    grid.replaceChildren();
+
+    data.forEach(programme => {
+        const card = document.createElement("div");
+        card.className = "program-card";
+
+        const icon = document.createElement("div");
+        icon.className = "program-icon";
+        icon.textContent = programmeIcon(programme);
+
+        const title = document.createElement("h3");
+        title.textContent = programme.title || "Programme";
+
+        // Keep the original programme description unchanged.
+        const description = document.createElement("p");
+        description.className = "program-description";
+        description.textContent = programme.description || "";
+
+        // Display the programme image separately when one has been saved.
+        const imageUrl = safeWebUrl(programme.image_url);
+        if (imageUrl) {
+            const image = document.createElement("img");
+            image.className = "program-image";
+            image.src = imageUrl;
+            image.alt = (programme.title || "IFEI-SL programme") + " photograph";
+            image.loading = "lazy";
+            image.onerror = () => image.remove();
+            card.appendChild(image);
+        }
+
+        card.append(icon, title, description);
+
+        // Additional information is shown underneath the original description.
+        if (programme.additional_text && String(programme.additional_text).trim()) {
+            const additional = document.createElement("p");
+            additional.className = "program-additional-text";
+            additional.textContent = programme.additional_text;
+            card.appendChild(additional);
+        }
+
+        grid.appendChild(card);
+    });
+}
+
+function addTeamMemberCard(grid, member) {
+    const card = document.createElement("div");
+    card.className = "person";
+
+    const photoUrl = safeWebUrl(member.photo_url);
+    if (photoUrl) {
+        const photo = document.createElement("img");
+        photo.src = photoUrl;
+        photo.alt = member.name ? "Photo of " + member.name : "Team member";
+        photo.loading = "lazy";
+        card.appendChild(photo);
+    }
+
+    const name = document.createElement("h3");
+    name.textContent = member.name || "";
+
+    const position = document.createElement("p");
+    position.textContent = member.position || "";
+
+    card.append(name, position);
+
+    if (member.bio) {
+        const bio = document.createElement("p");
+        bio.style.color = "var(--text)";
+        bio.textContent = member.bio;
+        card.appendChild(bio);
+    }
+
+    grid.appendChild(card);
+}
+
+async function loadTeam() {
+    const { data, error } = await ifeiDb
+        .from("ifei_team_members")
+        .select("name, position, bio, photo_url, display_order, is_active")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+    if (error) {
+        console.warn("IFEI team members could not be loaded; showing the built-in team list:", error.message);
+        return;
+    }
+
+    if (!data || data.length === 0) return;
+
+    const grid = document.getElementById("governanceGrid");
+    grid.replaceChildren();
+    data.forEach(member => addTeamMemberCard(grid, member));
+}
+
+function youtubeEmbedUrl(value) {
+    const url = safeWebUrl(value);
+    if (!url) return "";
+    try {
+        const parsed = new URL(url);
+        let videoId = "";
+        if (parsed.hostname.includes("youtu.be")) {
+            videoId = parsed.pathname.split("/").filter(Boolean)[0] || "";
+        } else if (parsed.hostname.includes("youtube.com")) {
+            if (parsed.pathname === "/watch") videoId = parsed.searchParams.get("v") || "";
+            else if (parsed.pathname.startsWith("/embed/")) videoId = parsed.pathname.split("/")[2] || "";
+            else if (parsed.pathname.startsWith("/shorts/")) videoId = parsed.pathname.split("/")[2] || "";
+        }
+        return /^[A-Za-z0-9_-]{6,}$/.test(videoId)
+            ? "https://www.youtube-nocookie.com/embed/" + videoId
+            : "";
+    } catch {
+        return "";
+    }
+}
+
+function addActivityCard(grid, activity) {
+    const card = document.createElement("article");
+    card.className = "activity-card";
+
+    const type = (activity.activity_type || "Update").toLowerCase();
+    const imageUrl = safeWebUrl(activity.image_url);
+    const videoUrl = safeWebUrl(activity.video_url);
+
+    if (type === "photo" && imageUrl) {
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = activity.title || "IFEI-SL activity photo";
+        image.loading = "lazy";
+        card.appendChild(image);
+    } else if (type === "video" && videoUrl) {
+        const embedUrl = youtubeEmbedUrl(videoUrl);
+        if (embedUrl) {
+            const frame = document.createElement("iframe");
+            frame.src = embedUrl;
+            frame.title = activity.title || "IFEI-SL activity video";
+            frame.loading = "lazy";
+            frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            frame.allowFullscreen = true;
+            card.appendChild(frame);
+        } else if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl)) {
+            const video = document.createElement("video");
+            video.src = videoUrl;
+            video.controls = true;
+            video.preload = "metadata";
+            card.appendChild(video);
+        } else {
+            const placeholder = document.createElement("div");
+            placeholder.className = "activity-placeholder";
+            placeholder.textContent = "▶";
+            card.appendChild(placeholder);
+        }
+    } else if (imageUrl) {
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = activity.title || "IFEI-SL activity";
+        image.loading = "lazy";
+        card.appendChild(image);
+    } else {
+        const placeholder = document.createElement("div");
+        placeholder.className = "activity-placeholder";
+        placeholder.textContent = type === "video" ? "▶" : "IFEI-SL";
+        card.appendChild(placeholder);
+    }
+
+    const content = document.createElement("div");
+    content.className = "activity-card-content";
+
+    const title = document.createElement("h3");
+    title.textContent = activity.title || "IFEI-SL Update";
+    content.appendChild(title);
+
+    if (activity.activity_date) {
+        const date = document.createElement("p");
+        date.className = "activity-date";
+        const parsedDate = new Date(activity.activity_date + "T00:00:00");
+        date.textContent = Number.isNaN(parsedDate.getTime())
+            ? activity.activity_date
+            : parsedDate.toLocaleDateString();
+        content.appendChild(date);
+    }
+
+    if (activity.description) {
+        const description = document.createElement("p");
+        description.textContent = activity.description;
+        content.appendChild(description);
+    }
+
+    if (type === "video" && videoUrl && !youtubeEmbedUrl(videoUrl) && !/\.(mp4|webm|ogg)(\?.*)?$/i.test(videoUrl)) {
+        const link = document.createElement("a");
+        link.href = videoUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Open video";
+        link.style.color = "var(--green)";
+        content.appendChild(link);
+    }
+
+    card.appendChild(content);
+    grid.appendChild(card);
+}
+
+async function loadActivities() {
+    const { data, error } = await ifeiDb
+        .from("ifei_activities")
+        .select("title, activity_type, description, image_url, video_url, activity_date")
+        .eq("is_published", true)
+        .order("activity_date", { ascending: false });
+
+    if (error) {
+        console.warn("IFEI activities could not be loaded:", error.message);
+        return;
+    }
+
+    const grid = document.getElementById("activitiesGrid");
+    if (!data || data.length === 0) return;
+
+    grid.replaceChildren();
+    data.forEach(activity => addActivityCard(grid, activity));
+}
+
+async function loadPublicWebsiteData() {
+    await Promise.allSettled([
+        loadSiteContent(),
+        loadProgrammes(),
+        loadTeam(),
+        loadActivities()
+    ]);
+}
+
+loadPublicWebsiteData();
+</script>
+
+
+
+<div id="teamPhotoViewer" role="dialog" aria-modal="true" aria-label="Team member photo viewer">
+    <div class="viewer-panel">
+        <div class="viewer-toolbar">
+            <button type="button" id="teamPhotoZoomOut" aria-label="Zoom out">−</button>
+            <span id="teamPhotoZoomLevel">100%</span>
+            <button type="button" id="teamPhotoZoomIn" aria-label="Zoom in">+</button>
+            <button type="button" id="teamPhotoZoomReset">Reset</button>
+            <button type="button" id="teamPhotoClose" aria-label="Close photo viewer">Close ✕</button>
+        </div>
+        <div class="viewer-image-area">
+            <img id="teamPhotoLarge" alt="Enlarged team member photo">
+        </div>
+        <p id="teamPhotoCaption"></p>
+    </div>
+</div>
+<script>
+(() => {
+    const viewer = document.getElementById('teamPhotoViewer');
+    const largeImage = document.getElementById('teamPhotoLarge');
+    const zoomLevel = document.getElementById('teamPhotoZoomLevel');
+    const caption = document.getElementById('teamPhotoCaption');
+    let zoom = 1;
+    let previousFocus = null;
+
+    function updateZoom() {
+        largeImage.style.transform = `scale(${zoom})`;
+        zoomLevel.textContent = `${Math.round(zoom * 100)}%`;
+    }
+    function closeViewer() {
+        viewer.classList.remove('open');
+        document.body.style.overflow = '';
+        largeImage.removeAttribute('src');
+        if (previousFocus) previousFocus.focus();
+    }
+    document.addEventListener('click', event => {
+        const photo = event.target.closest('#governanceGrid .person img');
+        if (!photo) return;
+        previousFocus = photo;
+        largeImage.src = photo.currentSrc || photo.src;
+        largeImage.alt = photo.alt || 'Team member photo';
+        caption.textContent = photo.alt || 'IFEI-SL team member';
+        zoom = 1;
+        updateZoom();
+        viewer.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('teamPhotoClose').focus();
+    });
+    document.getElementById('teamPhotoZoomIn').addEventListener('click', () => {
+        zoom = Math.min(zoom + 0.25, 3); updateZoom();
+    });
+    document.getElementById('teamPhotoZoomOut').addEventListener('click', () => {
+        zoom = Math.max(zoom - 0.25, 0.5); updateZoom();
+    });
+    document.getElementById('teamPhotoZoomReset').addEventListener('click', () => {
+        zoom = 1; updateZoom();
+    });
+    document.getElementById('teamPhotoClose').addEventListener('click', closeViewer);
+    viewer.addEventListener('click', event => { if (event.target === viewer) closeViewer(); });
+    document.addEventListener('keydown', event => {
+        if (!viewer.classList.contains('open')) return;
+        if (event.key === 'Escape') closeViewer();
+        if (event.key === '+' || event.key === '=') { zoom = Math.min(zoom + 0.25, 3); updateZoom(); }
+        if (event.key === '-') { zoom = Math.max(zoom - 0.25, 0.5); updateZoom(); }
+    });
+    largeImage.addEventListener('wheel', event => {
+        if (!viewer.classList.contains('open')) return;
+        event.preventDefault();
+        zoom = Math.max(0.5, Math.min(3, zoom + (event.deltaY < 0 ? 0.1 : -0.1)));
+        updateZoom();
+    }, { passive: false });
+})();
 </script>
 
 </body>
