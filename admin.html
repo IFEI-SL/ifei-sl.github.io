@@ -237,24 +237,26 @@ const supabaseClient = window.supabase.createClient(
 );
 
 // ========================================
-// PAGE ELEMENTS
+// PAGE ELEMENTS AND RECOVERY STATE
 // ========================================
 
 const loginForm = document.getElementById("loginForm");
-
 const loginButton = document.getElementById("loginButton");
-
 const forgotButton = document.getElementById("forgotButton");
-
-const resetRequestForm =
-document.getElementById("resetRequestForm");
-
-const newPasswordForm =
-document.getElementById("newPasswordForm");
-
+const resetRequestForm = document.getElementById("resetRequestForm");
+const newPasswordForm = document.getElementById("newPasswordForm");
 const message = document.getElementById("message");
 
-let isPasswordRecovery = false;
+// Capture the recovery indicator before Supabase processes the URL.
+// Supabase may return recovery details in either the URL hash or query string.
+const initialHash = new URLSearchParams(window.location.hash.substring(1));
+const initialQuery = new URLSearchParams(window.location.search);
+const recoveryLinkDetected =
+    initialHash.get("type") === "recovery" ||
+    initialQuery.has("code") ||
+    initialQuery.get("type") === "recovery";
+
+let isPasswordRecovery = recoveryLinkDetected;
 
 // ========================================
 // MESSAGE DISPLAY
@@ -270,13 +272,9 @@ function showMessage(text, color) {
 // ========================================
 
 function showLoginView() {
-
     loginForm.classList.remove("hidden");
-
     forgotButton.classList.remove("hidden");
-
     resetRequestForm.classList.add("hidden");
-
     newPasswordForm.classList.add("hidden");
 }
 
@@ -285,13 +283,9 @@ function showLoginView() {
 // ========================================
 
 function showResetRequestView() {
-
     loginForm.classList.add("hidden");
-
     forgotButton.classList.add("hidden");
-
     resetRequestForm.classList.remove("hidden");
-
     newPasswordForm.classList.add("hidden");
 
     document.getElementById("resetEmail").value =
@@ -305,19 +299,14 @@ function showResetRequestView() {
 // ========================================
 
 function showNewPasswordView() {
-
     isPasswordRecovery = true;
-
     loginForm.classList.add("hidden");
-
     forgotButton.classList.add("hidden");
-
     resetRequestForm.classList.add("hidden");
-
     newPasswordForm.classList.remove("hidden");
 
     showMessage(
-        "Enter and confirm your new password.",
+        "Your reset link has been recognised. Enter and confirm your new password.",
         "#123b56"
     );
 }
@@ -327,9 +316,7 @@ function showNewPasswordView() {
 // ========================================
 
 async function checkAdministrator(user) {
-
     if (!user || user.id !== ADMIN_USER_ID) {
-
         await supabaseClient.auth.signOut();
 
         showMessage(
@@ -338,7 +325,6 @@ async function checkAdministrator(user) {
         );
 
         showLoginView();
-
         return false;
     }
 
@@ -347,9 +333,7 @@ async function checkAdministrator(user) {
         "green"
     );
 
-    // Redirect verified administrator to dashboard
     window.location.replace("admin-dashboard.html");
-
     return true;
 }
 
@@ -357,10 +341,7 @@ async function checkAdministrator(user) {
 // FORGOT PASSWORD BUTTON
 // ========================================
 
-forgotButton.addEventListener(
-    "click",
-    showResetRequestView
-);
+forgotButton.addEventListener("click", showResetRequestView);
 
 // ========================================
 // BACK TO LOGIN BUTTON
@@ -368,272 +349,213 @@ forgotButton.addEventListener(
 
 document.getElementById("backToLoginButton")
 .addEventListener("click", function() {
-
     showLoginView();
-
     showMessage("", "#123b56");
-
 });
 
 // ========================================
 // ADMINISTRATOR LOGIN
 // ========================================
 
-loginForm.addEventListener(
-    "submit",
-    async function(event) {
+loginForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-        event.preventDefault();
+    loginButton.disabled = true;
+    loginButton.textContent = "Signing in...";
+    showMessage("Checking your login details...", "#123b56");
 
-        loginButton.disabled = true;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-        loginButton.textContent = "Signing in...";
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
 
+        if (error) throw error;
+        await checkAdministrator(data.user);
+
+    } catch (error) {
         showMessage(
-            "Checking your login details...",
-            "#123b56"
+            error.message || "Login failed. Please try again.",
+            "red"
         );
-
-        const email =
-            document.getElementById("email").value.trim();
-
-        const password =
-            document.getElementById("password").value;
-
-        try {
-
-            const { data, error } =
-                await supabaseClient.auth.signInWithPassword({
-
-                    email: email,
-
-                    password: password
-
-                });
-
-            if (error) throw error;
-
-            await checkAdministrator(data.user);
-
-        } catch (error) {
-
-            showMessage(
-                error.message ||
-                "Login failed. Please try again.",
-                "red"
-            );
-
-        } finally {
-
-            loginButton.disabled = false;
-
-            loginButton.textContent = "Sign In";
-
-        }
-
+    } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Sign In";
     }
-);
+});
 
 // ========================================
 // REQUEST PASSWORD RESET EMAIL
 // ========================================
 
-resetRequestForm.addEventListener(
-    "submit",
-    async function(event) {
+resetRequestForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-        event.preventDefault();
+    const sendButton = document.getElementById("sendResetButton");
+    const email = document.getElementById("resetEmail").value.trim();
 
-        const sendButton =
-            document.getElementById("sendResetButton");
+    sendButton.disabled = true;
+    sendButton.textContent = "Sending...";
+    showMessage("Requesting password-reset email...", "#123b56");
 
-        const email =
-            document.getElementById("resetEmail").value.trim();
+    try {
+        const redirectUrl =
+            window.location.origin + window.location.pathname;
 
-        sendButton.disabled = true;
-
-        sendButton.textContent = "Sending...";
-
-        showMessage(
-            "Requesting password-reset email...",
-            "#123b56"
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(
+            email,
+            { redirectTo: redirectUrl }
         );
 
-        try {
+        if (error) throw error;
 
-            const redirectUrl =
-                window.location.origin +
-                window.location.pathname;
+        showMessage(
+            "If this email belongs to an eligible IFEI-SL administrator account, a password-reset link has been sent. Please check the inbox and spam folder.",
+            "green"
+        );
 
-            const { error } =
-                await supabaseClient.auth.resetPasswordForEmail(
-                    email,
-                    {
-                        redirectTo: redirectUrl
-                    }
-                );
-
-            if (error) throw error;
-
-            showMessage(
-                "If this email belongs to an eligible IFEI-SL administrator account, a password-reset link has been sent. Please check the inbox and spam folder.",
-                "green"
-            );
-
-        } catch (error) {
-
-            showMessage(
-                error.message ||
-                "Unable to send the password-reset email. Please try again.",
-                "red"
-            );
-
-        } finally {
-
-            sendButton.disabled = false;
-
-            sendButton.textContent =
-                "Send Password Reset Email";
-
-        }
-
+    } catch (error) {
+        showMessage(
+            error.message || "Unable to send the password-reset email. Please try again.",
+            "red"
+        );
+    } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = "Send Password Reset Email";
     }
-);
+});
 
 // ========================================
 // SAVE NEW PASSWORD
 // ========================================
 
-newPasswordForm.addEventListener(
-    "submit",
-    async function(event) {
+newPasswordForm.addEventListener("submit", async function(event) {
+    event.preventDefault();
 
-        event.preventDefault();
+    const saveButton = document.getElementById("savePasswordButton");
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
-        const saveButton =
-            document.getElementById("savePasswordButton");
-
-        const newPassword =
-            document.getElementById("newPassword").value;
-
-        const confirmPassword =
-            document.getElementById("confirmPassword").value;
-
-        if (newPassword.length < 8) {
-
-            showMessage(
-                "Please use a password with at least 8 characters.",
-                "red"
-            );
-
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-
-            showMessage(
-                "The two passwords do not match.",
-                "red"
-            );
-
-            return;
-        }
-
-        saveButton.disabled = true;
-
-        saveButton.textContent = "Saving...";
-
+    if (newPassword.length < 8) {
         showMessage(
-            "Updating your password...",
-            "#123b56"
+            "Please use a password with at least 8 characters.",
+            "red"
         );
+        return;
+    }
 
-        try {
+    if (newPassword !== confirmPassword) {
+        showMessage("The two passwords do not match.", "red");
+        return;
+    }
 
-            const { error } =
-                await supabaseClient.auth.updateUser({
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+    showMessage("Updating your password. Please wait...", "#123b56");
 
-                    password: newPassword
+    try {
+        // updateUser succeeds only when Supabase accepts the password change.
+        const { data, error } = await supabaseClient.auth.updateUser({
+            password: newPassword
+        });
 
-                });
+        if (error) throw error;
 
-            if (error) throw error;
+        // Use the verified account email returned by Supabase, if available.
+        const accountEmail = data && data.user && data.user.email
+            ? data.user.email
+            : "";
 
-            await supabaseClient.auth.signOut();
+        if (accountEmail) {
+            document.getElementById("email").value = accountEmail;
+        }
 
-            isPasswordRecovery = false;
+        // The password update has succeeded. Sign out so the user must
+        // explicitly sign in again using the new password.
+        const { error: signOutError } = await supabaseClient.auth.signOut();
 
-            newPasswordForm.classList.add("hidden");
+        isPasswordRecovery = false;
+        document.getElementById("password").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+        showLoginView();
 
-            showLoginView();
+        // Remove recovery tokens/codes from the visible address bar.
+        window.history.replaceState({}, document.title, window.location.pathname);
 
-            document.getElementById("password").value = "";
-
-            document.getElementById("email").value =
-                document.getElementById("resetEmail").value.trim();
-
+        if (signOutError) {
             showMessage(
-                "Your password has been changed. You can now sign in with your new password.",
+                "Supabase confirmed that your password was changed. Please close this page and reopen the admin login before signing in with the new password.",
                 "green"
             );
-
-        } catch (error) {
-
+        } else {
             showMessage(
-                error.message ||
-                "Unable to update the password. Please use a fresh reset link and try again.",
-                "red"
+                "Password successfully changed. Please sign in using your administrator email and your new password.",
+                "green"
             );
-
-        } finally {
-
-            saveButton.disabled = false;
-
-            saveButton.textContent = "Save New Password";
-
         }
 
+    } catch (error) {
+        showMessage(
+            error.message ||
+            "Supabase could not confirm the password change. The password has not been confirmed as changed. Please do not assume the new password is active.",
+            "red"
+        );
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "Save New Password";
     }
-);
+});
 
 // ========================================
 // PASSWORD RECOVERY EVENT
 // ========================================
 
-supabaseClient.auth.onAuthStateChange(
-    function(event) {
-
-        if (event === "PASSWORD_RECOVERY") {
-
-            showNewPasswordView();
-
-        }
-
+// Register this listener before checking the current session. This prevents
+// a recovery session from being mistaken for an ordinary dashboard session.
+supabaseClient.auth.onAuthStateChange(function(event) {
+    if (event === "PASSWORD_RECOVERY") {
+        showNewPasswordView();
     }
-);
+});
 
 // ========================================
 // CHECK EXISTING LOGIN SESSION
 // ========================================
 
 async function checkExistingSession() {
+    try {
+        const { data, error } = await supabaseClient.auth.getSession();
 
-    const { data, error } =
-        await supabaseClient.auth.getSession();
+        if (error) throw error;
 
-    if (error) {
+        // A reset-link URL must never be redirected to the dashboard merely
+        // because Supabase has restored its temporary recovery session.
+        if (recoveryLinkDetected) {
+            if (data.session) {
+                showNewPasswordView();
+            } else {
+                showMessage(
+                    "The password-reset link could not be verified or has expired. Please wait before requesting another link, then try again when permitted.",
+                    "red"
+                );
+            }
+            return;
+        }
 
-        showMessage(error.message, "red");
+        if (data.session && !isPasswordRecovery) {
+            await checkAdministrator(data.session.user);
+        }
 
-        return;
+    } catch (error) {
+        showMessage(
+            error.message || "Unable to check the current login session.",
+            "red"
+        );
     }
-
-    if (data.session && !isPasswordRecovery) {
-
-        await checkAdministrator(data.session.user);
-
-    }
-
 }
 
 // ========================================
